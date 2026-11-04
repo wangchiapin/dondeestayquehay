@@ -8,12 +8,14 @@
 :root{--bg:#f7f5f0;--ink:#3b3a36;--sub:#8b877c;--line:#d8d4ca;--card:#fffdf8;--accent:#8a6f4d;--ok:#5f8a63;--bad:#b0605a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
-#app{max-width:480px;margin:0 auto;padding:12px 14px calc(24px + env(safe-area-inset-bottom))}
-h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spacing:2px}
-.sub{text-align:center;color:var(--sub);font-size:12px;margin-bottom:8px}
+#app{position:relative;max-width:480px;margin:0 auto;padding:12px 14px calc(24px + env(safe-area-inset-bottom))}
+h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spacing:2px;padding:0 46px}
+.sub{text-align:center;color:var(--sub);font-size:12px;margin-bottom:8px;min-height:0}
+.sub:empty{display:none}
+.gear{position:absolute;top:10px;right:14px;width:40px;height:40px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:19px;display:flex;align-items:center;justify-content:center}
 .bar{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0}
-.bar button{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px}
-.bar button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.bar button{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px}
+.bar button small{display:inline;font-size:11px;color:var(--sub);margin-left:4px}
 .score{text-align:center;font-size:14px;color:var(--sub);margin:4px 0 8px}
 #board{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:6px;aspect-ratio:1/1;width:100%}
 .cell{background:var(--card);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2px;position:relative;min-width:0}
@@ -22,21 +24,22 @@ h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spac
 .cell .img svg{width:100%;height:100%}
 .cell.notext .img{margin-top:8px;margin-bottom:4px;width:84%}
 .cell .n{font-size:14px;font-weight:600;margin-top:2px}
-.cell .p{font-size:10px;color:var(--sub)}
+.cell .p{font-size:10px;color:var(--sub);line-height:1.2}
 .cell .h{position:absolute;top:3px;left:0;right:0;font-size:10px;color:var(--accent)}
 .cell.target{outline:3px solid var(--accent)}
 .center{background:transparent;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;border-radius:10px;grid-row:2;grid-column:2}
 #char{width:78%;aspect-ratio:1/1;transition:transform 2s cubic-bezier(.2,.7,.2,1)}
 #char.noanim{transition:none}
-#spin{display:block;margin:14px auto 8px;font:inherit;font-size:17px;padding:10px 28px;border:none;border-radius:10px;background:var(--accent);color:#fff}
+#spin{display:block;margin:14px auto 8px;font:inherit;font-size:17px;padding:10px 28px;border:none;border-radius:10px;background:var(--accent);color:#fff;text-align:center}
+#spin small{display:block;font-size:11px;opacity:.85;font-weight:400}
 #spin:disabled{opacity:.4}
 #qbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:130px;text-align:center}
 .q{font-size:20px;font-weight:600}
-.qp{font-size:12px;color:var(--sub);margin-top:2px}
+.qp{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.3}
 .qe{font-size:12px;color:var(--sub);margin-top:2px;font-style:italic}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .opt{font:inherit;font-size:15px;padding:10px 6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px}
-.opt .op{display:block;font-size:10px;color:var(--sub)}
+.opt .op{display:block;font-size:10px;color:var(--sub);line-height:1.25}
 .opt.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
 .opt.ok .op{color:#e8f0e8}
 .opt.bad{background:var(--bad);color:#fff;border-color:var(--bad)}
@@ -45,33 +48,41 @@ h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spac
 .fb.ok{color:var(--ok)}.fb.bad{color:var(--bad)}
 .modal{position:fixed;inset:0;background:rgba(59,58,54,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
 .modal[hidden]{display:none}
+#setov{z-index:20}
 .mbox{background:var(--card);border-radius:14px;max-width:440px;width:100%;max-height:85vh;overflow:auto;padding:16px}
+.mbox h2{font-size:18px;margin:0 0 12px;text-align:center}
+.mbox h2 small{display:block;font-size:12px;color:var(--sub);font-weight:400}
+.sgrp{margin-bottom:12px}
+.sgrp h3{font-size:13px;margin:0 0 6px;font-weight:600}
+.sgrp h3 small{display:block;font-size:11px;color:var(--sub);font-weight:400}
+.sopts{display:flex;flex-wrap:wrap;gap:6px}
+.sopt{flex:1 1 auto;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px}
+.sopt small{display:block;font-size:11px;opacity:.8}
+.sopt.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.snote{font-size:11px;color:var(--sub);margin-top:4px}
+#setbox{padding-bottom:0}
+#setDone{position:sticky;bottom:0;margin:0 auto;width:100%;padding:12px 24px;background:var(--card);box-shadow:0 -10px 10px var(--card)}
+#setDone::after{content:"";display:block}
 .tabs{display:flex;gap:6px;margin-bottom:10px}
 .tabs button{flex:1;font:inherit;font-size:14px;padding:6px;border:1px solid var(--line);background:var(--bg);border-radius:8px;color:var(--ink)}
 .tabs button.on{background:var(--ink);color:var(--bg)}
-.row{display:grid;grid-template-columns:1.2fr 1.2fr 1.6fr;gap:6px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:center}
+.row{display:grid;gap:6px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:center}
 .row .nm{display:flex;align-items:center;gap:6px}
 .row .ic{display:inline-block;width:30px;height:30px;flex:none}
 .row .ic svg{width:100%;height:100%}
-.row .py{color:var(--sub);font-size:12px}.row .es{font-size:12px}
+.row .py{color:var(--sub);font-size:12px;line-height:1.3}.row .es{font-size:12px}
 .gr{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
-.gr .py{color:var(--sub);font-size:12px}.gr .es{font-size:12px;font-style:italic;color:var(--sub)}
+.gr .py{color:var(--sub);font-size:12px;line-height:1.3}.gr .es{font-size:12px;font-style:italic;color:var(--sub)}
 .close{display:block;margin:12px auto 0;font:inherit;padding:8px 24px;border:1px solid var(--line);background:var(--bg);border-radius:8px;color:var(--ink)}
 .big{font-size:40px;text-align:center;margin:8px 0}
 </style>
 </head>
 <body>
 <div id="app">
+  <button type="button" class="gear" id="gear">⚙️</button>
   <h1 id="title"></h1>
-  <div class="sub">Gira y ubica · Direcciones relativas</div>
-  <div class="bar">
-    <button id="bMode"></button>
-    <button id="bScript"></button>
-    <button id="bText"></button>
-    <button id="bPy"></button>
-    <button id="bHint"></button>
-    <button id="bDict"></button>
-  </div>
+  <div class="sub" id="sub"></div>
+  <div class="bar"><button type="button" id="bDict"></button></div>
   <div class="score" id="score"></div>
   <div id="board">
     <div class="cell" id="cell-7" data-s="7" style="grid-row:1;grid-column:1"></div>
@@ -92,84 +103,153 @@ h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spac
     <div class="cell" id="cell-4" data-s="4" style="grid-row:3;grid-column:2"></div>
     <div class="cell" id="cell-3" data-s="3" style="grid-row:3;grid-column:3"></div>
   </div>
-  <button id="spin"></button>
+  <button type="button" id="spin"></button>
   <section id="qbox"></section>
 </div>
 
 <div class="modal" id="dict" hidden>
   <div class="mbox">
     <div class="tabs">
-      <button id="tPlaces" data-tab="places"></button>
-      <button id="tDirs" data-tab="dirs"></button>
-      <button id="tGram" data-tab="gram"></button>
+      <button type="button" id="tPlaces" data-tab="places"></button>
+      <button type="button" id="tDirs" data-tab="dirs"></button>
+      <button type="button" id="tGram" data-tab="gram"></button>
     </div>
     <div id="dbody"></div>
-    <button class="close" id="dClose"></button>
+    <button type="button" class="close" id="dClose"></button>
   </div>
+</div>
+
+<div class="modal" id="setov" hidden>
+  <div class="mbox" id="setbox"></div>
 </div>
 
 <div class="modal" id="end" hidden>
   <div class="mbox">
     <div class="big">🎉</div>
     <div class="q" id="endText" style="text-align:center"></div>
-    <button class="close" id="again"></button>
+    <button type="button" class="close" id="again"></button>
   </div>
 </div>
 
 <script>
-const S={
-  title:['轉一轉・方位詞','转一转・方位词'],
-  easy:['簡單 4 方位','简单 4 方位'],
-  hard:['困難 8 方位','困难 8 方位'],
-  script:['繁體','简体'],
-  py:['拼音','拼音'],
-  text:['文字','文字'],
-  hint:['提示','提示'],
-  dict:['小字典','小字典'],
-  spin:['🔄 旋轉','🔄 旋转'],
-  turning:['轉動中…','转动中…'],
-  next:['再轉一次','再转一次'],
-  result:['看結果','看结果'],
-  intro:['按「旋轉」，角色會轉向。要用角色自己的方向來想！','按「旋转」，角色会转向。要用角色自己的方向来想！'],
-  introEs:['Pulsa «Girar»: el personaje cambia de dirección. ¡Piensa desde SU punto de vista!','Pulsa «Girar»: el personaje cambia de dirección. ¡Piensa desde SU punto de vista!'],
-  turningEs:['Girando…','Girando…'],
-  where:['哪裡','哪里'],
-  what:['什麼','什么'],
-  ok:['答對了！','答对了！'],
-  bad:['答錯了。正確：','答错了。正确：'],
-  end:['完成！答對','完成！答对'],
-  again:['再玩一次','再玩一次'],
-  close:['關閉','关闭'],
-  tPlaces:['地點','地点'],
-  tDirs:['方位','方位'],
-  tGram:['句型','句型'],
-  qn:['題','题']
+/* ============ 共用設定（和小狗找寶藏同一份 hanziGames.settings，來自 game-kit/parts/settings.js） ============ */
+const SETTINGS_KEY = 'hanziGames.settings';
+const SET_OPTS = { script:['trad','simp'], lang:['es','en','zh'], phon:['pinyin','zhuyin','both','off'], rate:['slow','normal','fast'] };
+function writeSettings(o){
+  try{
+    let cur = {};
+    try{ cur = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') || {}; }catch(e){}
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(Object.assign(cur, { v:1, script:o.script, lang:o.lang, phon:o.phon, rate:o.rate })));
+  }catch(e){}
+}
+function readSettings(){
+  const out = { v:1, script:'trad', lang:'es', phon:'pinyin', rate:'normal' };
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); }catch(e){}
+  if (saved && typeof saved === 'object'){
+    Object.keys(SET_OPTS).forEach(k => { if (SET_OPTS[k].includes(saved[k])) out[k] = saved[k]; });
+  } else writeSettings(out);
+  return out;
+}
+const SETTINGS = readSettings();
+const simp = () => SETTINGS.script === 'simp';
+
+/* ============ 這個遊戲自己的設定：難度、地點名稱、方位提示 ============ */
+const GAME_KEY = 'fangwei';
+const G = { mode:'easy', text:true, hint:false };
+try{
+  const s = JSON.parse(localStorage.getItem(GAME_KEY) || '{}') || {};
+  if (s.mode === 'easy' || s.mode === 'hard') G.mode = s.mode;
+  if (s.text === false) G.text = false;
+  G.hint = !!s.hint;
+}catch(e){}
+function saveG(){ try{ localStorage.setItem(GAME_KEY, JSON.stringify(G)); }catch(e){} }
+
+/* ============ 介面文字：[繁, 簡, 西, 英]；簡體仍用台灣用字 ============ */
+const T = {
+  title:['轉一轉・方位詞','转一转・方位词','Gira y ubica · Direcciones relativas','Spin and Locate · Relative Directions'],
+  spin:['🔄 旋轉','🔄 旋转','Girar','Spin'],
+  turning:['轉動中…','转动中…','Girando…','Spinning…'],
+  next:['再轉一次','再转一次','Girar otra vez','Spin again'],
+  result:['看結果','看结果','Ver resultado','See result'],
+  intro:['按「旋轉」，角色會轉向。要用角色自己的方向來想！','按「旋转」，角色会转向。要用角色自己的方向来想！','Pulsa «Girar»: el personaje cambia de dirección. ¡Piensa desde SU punto de vista!','Press “Spin”: the character turns. Think from THEIR point of view!'],
+  ok:['答對了！','答对了！','¡Correcto!','Correct!'],
+  bad:['答錯了。正確：','答错了。正确：','Incorrecto. Correcto:','Wrong. Correct:'],
+  end:['完成！答對','完成！答对','¡Terminado! Aciertos','Done! Correct'],
+  again:['再玩一次','再玩一次','Jugar otra vez','Play again'],
+  close:['關閉','关闭','Cerrar','Close'],
+  dict:['小字典','小字典','Mini diccionario','Mini dictionary'],
+  tPlaces:['地點','地点','Lugares','Places'],
+  tDirs:['方位','方位','Direcciones','Directions'],
+  tGram:['句型','句型','Estructuras','Patterns'],
+  qn:['題','题','','' ],
+  settings:['設定','设定','Ajustes','Settings'],
+  script:['中文字形','中文字形','Escritura china','Chinese script'],
+  langLbl:['語言','语言','Idioma','Language'],
+  zhOnly:['只有中文','只有中文','Solo chino','Chinese only'],
+  phon:['拼音／注音','拼音／注音','Pinyin / Zhuyin','Pinyin / Zhuyin'],
+  pinyin:['拼音','拼音','Pinyin','Pinyin'],
+  zhuyin:['注音','注音','Zhuyin','Zhuyin'],
+  both:['兩個都顯示','两个都显示','Los dos','Both'],
+  off:['關','关','No','Off'],
+  on:['開','开','Sí','On'],
+  diff:['難度','难度','Dificultad','Difficulty'],
+  easy:['簡單 4 方位','简单 4 方位','Fácil: 4 direcciones','Easy: 4 directions'],
+  hard:['困難 8 方位','困难 8 方位','Difícil: 8 direcciones','Hard: 8 directions'],
+  diffNote:['換難度會重新開始這一輪','换难度会重新开始这一轮','Al cambiar la dificultad se reinicia la ronda','Changing difficulty restarts the round'],
+  placeText:['地點名稱','地点名称','Nombre de los lugares','Place names'],
+  show:['顯示','显示','Mostrar','Show'],
+  hide:['隱藏','隐藏','Ocultar','Hide'],
+  hintLbl:['方位提示','方位提示','Pista de dirección','Direction hint'],
+  done:['完成','完成','Listo','Done'],
+  where:['哪裡','哪里','',''],
+  what:['什麼','什么','',''],
+  gzai:['在','在','estar (ubicación)','to be (located)'],
+  gyou:['有','有','haber / existir','there is / to exist'],
+  gdir:['前、後、左、右','前、后、左、右','',''],
+  gdirNote:['要用角色自己的方向來想。','要用角色自己的方向来想。','Siempre desde el punto de vista del personaje.','Always from the character\'s point of view.']
 };
+const tr = k => T[k][simp() ? 1 : 0];
+const fo = k => SETTINGS.lang === 'zh' ? '' : T[k][SETTINGS.lang === 'es' ? 2 : 3];
+const L = k => { const f = fo(k); return tr(k) + (f ? '<small>' + f + '</small>' : ''); };     // 中文＋外語小字
+const lab = k => { const f = fo(k); return tr(k) + (f ? ' · ' + f : ''); };                   // 單行
+const FL = () => SETTINGS.lang === 'es' ? 'es' : 'en';
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ============ 資料：拼音／注音依台灣讀音；外語西／英 ============ */
 const PLACES=[
-  {id:'cafe',zh:'咖啡廳',zs:'咖啡厅',py:'kāfēitīng',es:'la cafetería',esi:'una cafetería'},
-  {id:'lib',zh:'圖書館',zs:'图书馆',py:'túshūguǎn',es:'la biblioteca',esi:'una biblioteca'},
-  {id:'bank',zh:'銀行',zs:'银行',py:'yínháng',es:'el banco',esi:'un banco'},
-  {id:'post',zh:'郵局',zs:'邮局',py:'yóujú',es:'la oficina de correos',esi:'una oficina de correos'},
-  {id:'cvs',zh:'便利商店',zs:'便利商店',py:'biànlì shāngdiàn',es:'la tienda de conveniencia',esi:'una tienda de conveniencia'},
-  {id:'hosp',zh:'醫院',zs:'医院',py:'yīyuàn',es:'el hospital',esi:'un hospital'},
-  {id:'school',zh:'學校',zs:'学校',py:'xuéxiào',es:'la escuela',esi:'una escuela'},
-  {id:'night',zh:'夜市',zs:'夜市',py:'yèshì',es:'el mercado nocturno',esi:'un mercado nocturno'},
-  {id:'mrt',zh:'捷運站',zs:'捷运站',py:'jiéyùnzhàn',es:'la estación del metro',esi:'una estación de metro'},
-  {id:'pharm',zh:'藥局',zs:'药局',py:'yàojú',es:'la farmacia',esi:'una farmacia'},
-  {id:'park',zh:'公園',zs:'公园',py:'gōngyuán',es:'el parque',esi:'un parque'},
-  {id:'mart',zh:'超市',zs:'超市',py:'chāoshì',es:'el supermercado',esi:'un supermercado'}
+  {id:'cafe',zh:'咖啡廳',zs:'咖啡厅',py:'kāfēitīng',zy:'ㄎㄚ ㄈㄟ ㄊㄧㄥ',es:'la cafetería',esi:'una cafetería',en:'the café',eni:'a café'},
+  {id:'lib',zh:'圖書館',zs:'图书馆',py:'túshūguǎn',zy:'ㄊㄨˊ ㄕㄨ ㄍㄨㄢˇ',es:'la biblioteca',esi:'una biblioteca',en:'the library',eni:'a library'},
+  {id:'bank',zh:'銀行',zs:'银行',py:'yínháng',zy:'ㄧㄣˊ ㄏㄤˊ',es:'el banco',esi:'un banco',en:'the bank',eni:'a bank'},
+  {id:'post',zh:'郵局',zs:'邮局',py:'yóujú',zy:'ㄧㄡˊ ㄐㄩˊ',es:'la oficina de correos',esi:'una oficina de correos',en:'the post office',eni:'a post office'},
+  {id:'cvs',zh:'便利商店',zs:'便利商店',py:'biànlì shāngdiàn',zy:'ㄅㄧㄢˋ ㄌㄧˋ ㄕㄤ ㄉㄧㄢˋ',es:'la tienda de conveniencia',esi:'una tienda de conveniencia',en:'the convenience store',eni:'a convenience store'},
+  {id:'hosp',zh:'醫院',zs:'医院',py:'yīyuàn',zy:'ㄧ ㄩㄢˋ',es:'el hospital',esi:'un hospital',en:'the hospital',eni:'a hospital'},
+  {id:'school',zh:'學校',zs:'学校',py:'xuéxiào',zy:'ㄒㄩㄝˊ ㄒㄧㄠˋ',es:'la escuela',esi:'una escuela',en:'the school',eni:'a school'},
+  {id:'night',zh:'夜市',zs:'夜市',py:'yèshì',zy:'ㄧㄝˋ ㄕˋ',es:'el mercado nocturno',esi:'un mercado nocturno',en:'the night market',eni:'a night market'},
+  {id:'mrt',zh:'捷運站',zs:'捷运站',py:'jiéyùnzhàn',zy:'ㄐㄧㄝˊ ㄩㄣˋ ㄓㄢˋ',es:'la estación del metro',esi:'una estación de metro',en:'the MRT station',eni:'an MRT station'},
+  {id:'pharm',zh:'藥局',zs:'药局',py:'yàojú',zy:'ㄧㄠˋ ㄐㄩˊ',es:'la farmacia',esi:'una farmacia',en:'the pharmacy',eni:'a pharmacy'},
+  {id:'park',zh:'公園',zs:'公园',py:'gōngyuán',zy:'ㄍㄨㄥ ㄩㄢˊ',es:'el parque',esi:'un parque',en:'the park',eni:'a park'},
+  {id:'mart',zh:'超市',zs:'超市',py:'chāoshì',zy:'ㄔㄠ ㄕˋ',es:'el supermercado',esi:'un supermercado',en:'the supermarket',eni:'a supermarket'}
 ];
 // 相對角色的方位，依順時針：0 前 → 7 左前
 const DIRS=[
-  {zh:'前面',zs:'前面',py:'qiánmiàn',es:'delante de mí'},
-  {zh:'右前面',zs:'右前面',py:'yòu qiánmiàn',es:'delante a la derecha'},
-  {zh:'右邊',zs:'右边',py:'yòubiān',es:'a la derecha'},
-  {zh:'右後面',zs:'右后面',py:'yòu hòumiàn',es:'detrás a la derecha'},
-  {zh:'後面',zs:'后面',py:'hòumiàn',es:'detrás de mí'},
-  {zh:'左後面',zs:'左后面',py:'zuǒ hòumiàn',es:'detrás a la izquierda'},
-  {zh:'左邊',zs:'左边',py:'zuǒbiān',es:'a la izquierda'},
-  {zh:'左前面',zs:'左前面',py:'zuǒ qiánmiàn',es:'delante a la izquierda'}
+  {zh:'前面',zs:'前面',py:'qiánmiàn',zy:'ㄑㄧㄢˊ ㄇㄧㄢˋ',es:'delante de mí',en:'ahead of me'},
+  {zh:'右前面',zs:'右前面',py:'yòu qiánmiàn',zy:'ㄧㄡˋ ㄑㄧㄢˊ ㄇㄧㄢˋ',es:'delante a la derecha',en:'ahead to my right'},
+  {zh:'右邊',zs:'右边',py:'yòubiān',zy:'ㄧㄡˋ ㄅㄧㄢ',es:'a la derecha',en:'to my right'},
+  {zh:'右後面',zs:'右后面',py:'yòu hòumiàn',zy:'ㄧㄡˋ ㄏㄡˋ ㄇㄧㄢˋ',es:'detrás a la derecha',en:'behind me to the right'},
+  {zh:'後面',zs:'后面',py:'hòumiàn',zy:'ㄏㄡˋ ㄇㄧㄢˋ',es:'detrás de mí',en:'behind me'},
+  {zh:'左後面',zs:'左后面',py:'zuǒ hòumiàn',zy:'ㄗㄨㄛˇ ㄏㄡˋ ㄇㄧㄢˋ',es:'detrás a la izquierda',en:'behind me to the left'},
+  {zh:'左邊',zs:'左边',py:'zuǒbiān',zy:'ㄗㄨㄛˇ ㄅㄧㄢ',es:'a la izquierda',en:'to my left'},
+  {zh:'左前面',zs:'左前面',py:'zuǒ qiánmiàn',zy:'ㄗㄨㄛˇ ㄑㄧㄢˊ ㄇㄧㄢˋ',es:'delante a la izquierda',en:'ahead to my left'}
 ];
+const W={ zai:{py:'zài',zy:'ㄗㄞˋ'}, wo:{py:'wǒ',zy:'ㄨㄛˇ'}, de:{py:'de',zy:'ㄉㄜ˙'}, you:{py:'yǒu',zy:'ㄧㄡˇ'}, nali:{py:'nǎlǐ',zy:'ㄋㄚˇ ㄌㄧˇ'}, shme:{py:'shénme',zy:'ㄕㄣˊ ㄇㄜ˙'} };
+const J=(...a)=>({py:a.map(x=>x.py).join(' '),zy:a.map(x=>x.zy).join(' ')});
+// 依「拼音／注音」設定，回傳要顯示的幾行（關＝沒有）
+function phLines(o){
+  const m=SETTINGS.phon;
+  return m==='pinyin'?[o.py]:m==='zhuyin'?[o.zy]:m==='both'?[o.py,o.zy]:[];
+}
+const phHtml=o=>phLines(o).join('<br>');
 
 const cB='#e9e4d8',cT='#cdbfa6',cG='#b9c4b0',cW='#fffdf8',cR='#c98a84',cBL='#c3cfd6',GR='<path d="M4 56H60"/>';
 const svg=x=>'<svg viewBox="0 0 64 64" fill="none" stroke="#3b3a36" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">'+x+'</svg>';
@@ -187,21 +267,20 @@ pharm:svg(GR+`<rect x="8" y="24" width="48" height="32" fill="${cB}"/><rect x="8
 park:svg(GR+`<rect x="14" y="36" width="5" height="20" fill="${cT}"/><circle cx="16.5" cy="26" r="12" fill="${cG}"/><rect x="44" y="40" width="4" height="16" fill="${cT}"/><circle cx="46" cy="32" r="9" fill="${cG}"/><path d="M26 46h14M26 50h14M28 50v6M38 50v6"/>`),
 mart:svg(GR+`<path d="M16 20H56L50 40H22Z" fill="${cB}"/><path d="M6 12H13L22 40"/><path d="M28 20L30 40M38 20V40M48 20L46 40"/><circle cx="26" cy="48" r="4" fill="${cT}"/><circle cx="46" cy="48" r="4" fill="${cT}"/><rect x="24" y="10" width="10" height="10" fill="${cG}"/><circle cx="44" cy="15" r="5" fill="${cR}"/>`)
 };
-const ROUNDS=10;
-const st={script:'t',py:false,text:true,hint:false,mode:'easy',cells:[],facing:0,angle:0,q:null,answered:false,n:0,score:0,spinning:false,dtab:'places'};
-try{const s=JSON.parse(localStorage.getItem('fangwei')||'{}');if(s.script)st.script=s.script;st.py=!!s.py;if(s.text===false)st.text=false;st.hint=!!s.hint;if(s.mode)st.mode=s.mode;}catch(e){}
-function save(){try{localStorage.setItem('fangwei',JSON.stringify({script:st.script,py:st.py,text:st.text,hint:st.hint,mode:st.mode}))}catch(e){}}
 
+/* ============ 遊戲 ============ */
+const ROUNDS=10;
+const st={cells:[],facing:0,angle:0,q:null,answered:false,n:0,score:0,spinning:false,dtab:'places',token:0};
 const $=s=>document.querySelector(s);
-const T=a=>a[st.script==='t'?0:1];
-const pn=p=>st.script==='t'?p.zh:p.zs;
-const dn=d=>st.script==='t'?d.zh:d.zs;
+const pn=p=>simp()?p.zs:p.zh;
+const dn=d=>simp()?d.zs:d.zh;
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const evenOnly=()=>st.mode==='easy';
-const allowedCells=()=>evenOnly()?[0,2,4,6]:[0,1,2,3,4,5,6,7];
+const allowedCells=()=>G.mode==='easy'?[0,2,4,6]:[0,1,2,3,4,5,6,7];
+const defN=p=>p[FL()], indN=p=>p[FL()==='es'?'esi':'eni'], dirF=d=>d[FL()];
 
 function newGame(){
+  st.token++;
   st.n=0;st.score=0;st.q=null;st.answered=false;st.spinning=false;st.facing=0;st.angle=0;
   const ch=$('#char');ch.classList.add('noanim');ch.style.transform='rotate(0deg)';ch.dataset.facing='0';
   void ch.offsetWidth;ch.classList.remove('noanim');
@@ -217,8 +296,9 @@ function spin(){
   const delta=((f-st.facing+8)%8)*45;
   st.angle+=720+delta;st.facing=f;st.q=null;st.answered=false;st.spinning=true;
   const ch=$('#char');ch.style.transform='rotate('+st.angle+'deg)';ch.dataset.facing=String(f);
+  const tk=st.token;
   update();
-  setTimeout(()=>{st.spinning=false;makeQuestion();update();},2100);
+  setTimeout(()=>{if(tk!==st.token)return;st.spinning=false;makeQuestion();update();},2100);
 }
 
 function makeQuestion(){
@@ -227,8 +307,7 @@ function makeQuestion(){
   const type=Math.random()<.5?'zai':'you';
   let options;
   if(type==='zai'){
-    const pool=allowedCells().map(c=>c); // 相對方位集合與地點格相同
-    const others=shuffle(pool.filter(r=>r!==rel)).slice(0,3);
+    const others=shuffle(allowedCells().filter(r=>r!==rel)).slice(0,3);
     options=shuffle([rel,...others]).map(r=>({val:r,ok:r===rel}));
   }else{
     const others=shuffle(filled.filter(c=>c!==s)).slice(0,3).map(c=>st.cells[c]);
@@ -245,92 +324,138 @@ function answer(i){
 }
 
 function optLabel(o){
-  if(st.q.type==='zai'){const d=DIRS[o.val];return {t:'在我的'+dn(d),p:'zài wǒ de '+d.py};}
-  const p=PLACES.find(x=>x.id===o.val);return {t:'有'+pn(p),p:'yǒu '+p.py};
+  if(st.q.type==='zai'){const d=DIRS[o.val];return Object.assign({t:'在我的'+dn(d)},J(W.zai,W.wo,W.de,d));}
+  const p=PLACES.find(x=>x.id===o.val);return Object.assign({t:'有'+pn(p)},J(W.you,p));
 }
 function fullSentence(q){
-  const d=DIRS[q.rel],p=q.place;
-  if(q.type==='zai')return {t:pn(p)+'在我的'+dn(d)+'。',p:p.py+' zài wǒ de '+d.py,e:'Está '+d.es.replace('delante de mí','delante de mí')+'.'};
-  return {t:'我的'+dn(d)+'有'+pn(p)+'。',p:'wǒ de '+d.py+' yǒu '+p.py,e:'Hay '+p.esi+' '+d.es+'.'};
+  const d=DIRS[q.rel],p=q.place,es=FL()==='es';
+  if(q.type==='zai')return Object.assign({t:pn(p)+'在我的'+dn(d)+'。',f:cap(defN(p))+(es?' está ':' is ')+dirF(d)+'.'},J(p,W.zai,W.wo,W.de,d));
+  return Object.assign({t:'我的'+dn(d)+'有'+pn(p)+'。',f:es?cap(dirF(d))+' hay '+indN(p)+'.':'There is '+indN(p)+' '+dirF(d)+'.'},J(W.wo,W.de,d,W.you,p));
 }
 
 function update(){
-  $('#title').textContent=T(S.title);
-  $('#bMode').textContent=st.mode==='easy'?T(S.easy):T(S.hard);
-  $('#bScript').textContent=T(S.script);
-  $('#bText').textContent=T(S.text);$('#bText').classList.toggle('on',st.text);
-  $('#bPy').textContent=T(S.py);$('#bPy').classList.toggle('on',st.py);
-  $('#bHint').textContent=T(S.hint);$('#bHint').classList.toggle('on',st.hint);
-  $('#bDict').textContent=T(S.dict);
-  $('#score').textContent=st.n+' / '+ROUNDS+' '+T(S.qn)+'　✓ '+st.score;
+  document.documentElement.lang=SETTINGS.lang==='en'?'en':(SETTINGS.lang==='es'?'es':(simp()?'zh-CN':'zh-TW'));
+  $('#title').textContent=tr('title');
+  $('#sub').textContent=fo('title');
+  $('#gear').setAttribute('aria-label',lab('settings'));
+  $('#bDict').innerHTML='📖 '+L('dict');
+  $('#score').textContent=st.n+' / '+ROUNDS+' '+tr('qn')+'　✓ '+st.score;
   // 格子
   for(let s=0;s<8;s++){
     const el=$('#cell-'+s),p=st.cells[s];
     el.dataset.cell=s;
-    if(!p){el.className='cell empty';el.innerHTML='';continue;}
-    el.className='cell'+(st.text?'':' notext')+(st.answered&&st.q&&st.q.cell===s?' target':'');
-    const rel=(s-st.facing+8)%8;
-    el.innerHTML=(st.hint&&!st.spinning?'<div class="h">'+dn(DIRS[rel])+'</div>':'')+
-      '<div class="img" role="img" aria-label="'+pn(p)+'">'+ICON[p.id]+'</div>'+(st.text?'<div class="n">'+pn(p)+'</div>'+(st.py?'<div class="p">'+p.py+'</div>':''):'');
+    if(!p){el.className='cell empty';el.innerHTML='';delete el.dataset.name;delete el.dataset.place;continue;}
+    el.className='cell'+(G.text?'':' notext')+(st.answered&&st.q&&st.q.cell===s?' target':'');
+    const rel=(s-st.facing+8)%8,ph=phHtml(p);
+    el.innerHTML=(G.hint&&!st.spinning?'<div class="h">'+dn(DIRS[rel])+'</div>':'')+
+      '<div class="img" role="img" aria-label="'+pn(p)+'">'+ICON[p.id]+'</div>'+(G.text?'<div class="n">'+pn(p)+'</div>'+(ph?'<div class="p">'+ph+'</div>':''):'');
     el.dataset.name=pn(p);
     el.dataset.place=p.id;
   }
   // 旋轉鈕
   const sp=$('#spin');
-  if(st.q&&st.answered)sp.textContent=st.n>=ROUNDS?T(S.result):T(S.next);else sp.textContent=T(S.spin);
+  sp.innerHTML=(st.q&&st.answered)?(st.n>=ROUNDS?L('result'):L('next')):L('spin');
   sp.disabled=st.spinning||!!(st.q&&!st.answered);
   // 題目區
   const qb=$('#qbox');
-  if(st.spinning){qb.innerHTML='<div class="q">'+T(S.turning)+'</div><div class="qe">'+T(S.turningEs)+'</div>';return}
-  if(!st.q){qb.innerHTML='<div class="q" style="font-size:16px">'+T(S.intro)+'</div><div class="qe">'+T(S.introEs)+'</div>';return}
-  const q=st.q;let qt,qp,qe;
+  const f1=k=>fo(k)?'<div class="qe">'+fo(k)+'</div>':'';
+  if(st.spinning){qb.innerHTML='<div class="q">'+tr('turning')+'</div>'+f1('turning');return}
+  if(!st.q){qb.innerHTML='<div class="q" style="font-size:16px">'+tr('intro')+'</div>'+f1('intro');return}
+  const q=st.q,es=FL()==='es',hasF=SETTINGS.lang!=='zh';let qt,qo,qe='';
   if(q.type==='zai'){
-    qt=pn(q.place)+'在'+T(S.where)+'？';qp=q.place.py+' zài nǎlǐ?';qe='¿Dónde está '+q.place.es+'?';
+    qt=pn(q.place)+'在'+tr('where')+'？';qo=J(q.place,W.zai,W.nali);
+    if(hasF)qe=es?'¿Dónde está '+defN(q.place)+'?':'Where is '+defN(q.place)+'?';
   }else{
-    qt='我的'+dn(DIRS[q.rel])+'有'+T(S.what)+'？';qp='wǒ de '+DIRS[q.rel].py+' yǒu shénme?';qe='¿Qué hay '+DIRS[q.rel].es+'?';
+    qt='我的'+dn(DIRS[q.rel])+'有'+tr('what')+'？';qo=J(W.wo,W.de,DIRS[q.rel],W.you,W.shme);
+    if(hasF)qe=es?'¿Qué hay '+dirF(DIRS[q.rel])+'?':'What is '+dirF(DIRS[q.rel])+'?';
   }
-  let h='<div class="q">'+qt+'</div>'+(st.py?'<div class="qp">'+qp+'</div>':'')+'<div class="qe">'+qe+'</div><div class="opts">';
+  const qph=phHtml(qo);
+  let h='<div class="q">'+qt+'</div>'+(qph?'<div class="qp">'+qph+'</div>':'')+(qe?'<div class="qe">'+qe+'</div>':'')+'<div class="opts">';
   q.options.forEach((o,i)=>{
-    const l=optLabel(o);let cls='opt';
+    const l=optLabel(o),lp=phHtml(l);let cls='opt';
     if(st.answered){if(o.ok)cls+=' ok';else if(q.picked===i)cls+=' bad';}
-    h+='<button class="'+cls+'" data-i="'+i+'" data-correct="'+(o.ok?1:0)+'"'+(st.answered?' disabled':'')+'>'+l.t+(st.py?'<span class="op">'+l.p+'</span>':'')+'</button>';
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'" data-correct="'+(o.ok?1:0)+'"'+(st.answered?' disabled':'')+'>'+l.t+(lp?'<span class="op">'+lp+'</span>':'')+'</button>';
   });
   h+='</div>';
   if(st.answered){
-    const good=q.options[q.picked].ok,fs=fullSentence(q);
-    h+='<div class="fb '+(good?'ok':'bad')+'" id="fb">'+(good?T(S.ok):T(S.bad))+'<br>'+fs.t+(st.py?'<div class="qp">'+fs.p+'</div>':'')+'<div class="qe">'+fs.e+'</div></div>';
+    const good=q.options[q.picked].ok,fs=fullSentence(q),fph=phHtml(fs);
+    h+='<div class="fb '+(good?'ok':'bad')+'" id="fb">'+tr(good?'ok':'bad')+'<br>'+fs.t+(fph?'<div class="qp">'+fph+'</div>':'')+(hasF?'<div class="qe">'+fs.f+'</div>':'')+'</div>';
   }
   qb.innerHTML=h;
   qb.dataset.type=q.type;qb.dataset.cell=q.cell;qb.dataset.rel=q.rel;
 }
 
+/* ============ 小字典 ============ */
+function dictRow(name,o,gloss){
+  const ph=phHtml(o),cols=['1.2fr'];
+  let h='<div class="row" data-row="1"><span class="nm">'+name+'</span>';
+  if(ph){cols.push('1.2fr');h+='<span class="py">'+ph+'</span>';}
+  if(gloss){cols.push('1.6fr');h+='<span class="es">'+gloss+'</span>';}
+  return h.replace('class="row" data-row="1"','class="row" style="grid-template-columns:'+cols.join(' ')+'"')+'</div>';
+}
 function renderDict(){
-  $('#tPlaces').textContent=T(S.tPlaces);$('#tDirs').textContent=T(S.tDirs);$('#tGram').textContent=T(S.tGram);$('#dClose').textContent=T(S.close);
+  $('#tPlaces').textContent=lab('tPlaces');$('#tDirs').textContent=lab('tDirs');$('#tGram').textContent=lab('tGram');$('#dClose').textContent=lab('close');
   ['places','dirs','gram'].forEach(k=>{const b=document.querySelector('[data-tab="'+k+'"]');b.classList.toggle('on',st.dtab===k)});
-  let h='';
-  if(st.dtab==='places')PLACES.forEach(p=>{h+='<div class="row"><span class="nm"><i class="ic" data-icon="'+p.id+'">'+ICON[p.id]+'</i>'+pn(p)+'</span><span class="py">'+p.py+'</span><span class="es">'+p.es+'</span></div>'});
-  else if(st.dtab==='dirs')DIRS.forEach(d=>{h+='<div class="row"><span>'+dn(d)+'</span><span class="py">'+d.py+'</span><span class="es">'+d.es+'</span></div>'});
+  const hasF=SETTINGS.lang!=='zh';let h='';
+  if(st.dtab==='places')PLACES.forEach(p=>{h+=dictRow('<i class="ic" data-icon="'+p.id+'">'+ICON[p.id]+'</i>'+pn(p),p,hasF?defN(p):'')});
+  else if(st.dtab==='dirs')DIRS.forEach(d=>{h+=dictRow(dn(d),d,hasF?dirF(d):'')});
   else{
-    const p=PLACES[0],d=DIRS[6];
-    h+='<div class="gr"><b>在 zài</b>　estar (ubicación)<br>'+pn(p)+'在我的'+dn(d)+'。<div class="py">'+p.py+' zài wǒ de '+d.py+'</div><div class="es">'+p.es.charAt(0).toUpperCase()+p.es.slice(1)+' está '+d.es+'.</div></div>';
-    h+='<div class="gr"><b>有 yǒu</b>　haber / existir<br>我的'+dn(d)+'有'+pn(p)+'。<div class="py">wǒ de '+d.py+' yǒu '+p.py+'</div><div class="es">'+d.es.charAt(0).toUpperCase()+d.es.slice(1)+' hay '+p.esi+'.</div></div>';
-    h+='<div class="gr"><b>'+T(['前、後、左、右','前、后、左、右'])+'</b><br>'+T(['要用角色自己的方向來想。','要用角色自己的方向来想。'])+'<div class="es">Siempre desde el punto de vista del personaje.</div></div>';
+    const p=PLACES[0],d=DIRS[6],a=Object.assign({t:pn(p)+'在我的'+dn(d)+'。',f:cap(defN(p))+(FL()==='es'?' está ':' is ')+dirF(d)+'.'},J(p,W.zai,W.wo,W.de,d));
+    const b=Object.assign({t:'我的'+dn(d)+'有'+pn(p)+'。',f:FL()==='es'?cap(dirF(d))+' hay '+indN(p)+'.':'There is '+indN(p)+' '+dirF(d)+'.'},J(W.wo,W.de,d,W.you,p));
+    const gr=(head,gl,s)=>'<div class="gr"><b>'+head+'</b>'+(hasF&&gl?'　'+gl:'')+'<br>'+s.t+(phHtml(s)?'<div class="py">'+phHtml(s)+'</div>':'')+(hasF?'<div class="es">'+s.f+'</div>':'')+'</div>';
+    const ph1=phHtml(W.zai),ph2=phHtml(W.you);
+    h+=gr('在'+(ph1?' '+ph1.replace('<br>',' '):''),fo('gzai'),a);
+    h+=gr('有'+(ph2?' '+ph2.replace('<br>',' '):''),fo('gyou'),b);
+    h+='<div class="gr"><b>'+tr('gdir')+'</b><br>'+tr('gdirNote')+(hasF?'<div class="es">'+fo('gdirNote')+'</div>':'')+'</div>';
   }
   $('#dbody').innerHTML=h;
 }
 
-// 事件
+/* ============ ⚙️ 設定視窗 ============ */
+function sopt(label,on,k,v,g){return '<button type="button" class="sopt'+(on?' on':'')+'" data-k="'+k+'" data-v="'+v+'" data-g="'+(g?1:0)+'">'+label+'</button>';}
+function drawSet(){
+  const lg=(k,x)=>'<div class="sgrp"><h3>'+L(k)+'</h3><div class="sopts">'+x+'</div></div>';
+  $('#setbox').innerHTML=
+    '<h2>⚙️ '+tr('settings')+(fo('settings')?'<small>'+fo('settings')+'</small>':'')+'</h2>'+
+    lg('script',sopt('繁體',SETTINGS.script==='trad','script','trad')+sopt('简体',SETTINGS.script==='simp','script','simp'))+
+    lg('langLbl',sopt('中文＋<small>Español</small>',SETTINGS.lang==='es','lang','es')+sopt('中文＋<small>English</small>',SETTINGS.lang==='en','lang','en')+sopt(tr('zhOnly'),SETTINGS.lang==='zh','lang','zh'))+
+    lg('phon',sopt(L('pinyin'),SETTINGS.phon==='pinyin','phon','pinyin')+sopt(L('zhuyin'),SETTINGS.phon==='zhuyin','phon','zhuyin')+sopt(L('both'),SETTINGS.phon==='both','phon','both')+sopt(L('off'),SETTINGS.phon==='off','phon','off'))+
+    '<div class="sgrp"><h3>'+L('diff')+'</h3><div class="sopts">'+sopt(L('easy'),G.mode==='easy','mode','easy',1)+sopt(L('hard'),G.mode==='hard','mode','hard',1)+'</div><div class="snote">'+tr('diffNote')+(fo('diffNote')?' · '+fo('diffNote'):'')+'</div></div>'+
+    lg('placeText',sopt(L('show'),G.text,'text','1',1)+sopt(L('hide'),!G.text,'text','0',1))+
+    lg('hintLbl',sopt(L('on'),G.hint,'hint','1',1)+sopt(L('off'),!G.hint,'hint','0',1))+
+    '<button type="button" class="close" id="setDone">'+lab('done')+'</button>';
+  document.querySelectorAll('#setbox .sopt').forEach(b=>b.addEventListener('click',()=>setOpt(b.dataset.k,b.dataset.v,b.dataset.g==='1')));
+  $('#setDone').addEventListener('click',closeSet);
+}
+function setOpt(k,v,isGame){
+  if(!isGame){
+    SETTINGS[k]=v;writeSettings(SETTINGS);
+  }else if(k==='mode'){
+    if(G.mode===v){drawSet();return}
+    G.mode=v;saveG();drawSet();newGame();renderDict();return;
+  }else{
+    G[k]=(v==='1');saveG();
+  }
+  drawSet();update();renderDict();
+}
+function openSet(){drawSet();$('#setov').hidden=false}
+function closeSet(){$('#setov').hidden=true}
+// 另一個分頁改了共用設定 → 這裡跟著更新
+window.addEventListener('storage',e=>{
+  if(e.key!==SETTINGS_KEY)return;
+  Object.assign(SETTINGS,readSettings());
+  update();renderDict();if(!$('#setov').hidden)drawSet();
+});
+
+/* ============ 事件 ============ */
 $('#spin').onclick=()=>{if(st.q&&st.answered&&st.n>=ROUNDS){showEnd();return}spin()};
 $('#qbox').onclick=e=>{const b=e.target.closest('.opt');if(b)answer(+b.dataset.i)};
-$('#bMode').onclick=()=>{st.mode=st.mode==='easy'?'hard':'easy';save();newGame()};
-$('#bScript').onclick=()=>{st.script=st.script==='t'?'s':'t';save();update();renderDict()};
-$('#bText').onclick=()=>{st.text=!st.text;save();update()};
-$('#bPy').onclick=()=>{st.py=!st.py;save();update()};
-$('#bHint').onclick=()=>{st.hint=!st.hint;save();update()};
+$('#gear').onclick=openSet;
+$('#setov').addEventListener('click',e=>{if(e.target.id==='setov')closeSet()});
 $('#bDict').onclick=()=>{renderDict();$('#dict').hidden=false};
 $('#dClose').onclick=()=>{$('#dict').hidden=true};
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{st.dtab=b.dataset.tab;renderDict()});
-function showEnd(){$('#endText').textContent=T(S.end)+' '+st.score+' / '+ROUNDS;$('#again').textContent=T(S.again);$('#end').hidden=false}
+function showEnd(){$('#endText').textContent=tr('end')+' '+st.score+' / '+ROUNDS;$('#again').textContent=lab('again');$('#end').hidden=false}
 $('#again').onclick=newGame;
 newGame();
 </script>
