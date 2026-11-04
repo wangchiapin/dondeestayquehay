@@ -123,11 +123,7 @@ h1{font-size:18px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
       <div class="hc" id="hcE" style="right:0;top:39.5%"></div>
       <div class="hc" id="hcS" style="left:39.5%;bottom:0"></div>
       <div class="hc" id="hcW" style="left:0;top:39.5%"></div>
-      <div class="hme" id="hme"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L63 24 L37 24 Z" fill="#8a6f4d"/>
-        <circle cx="21" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="79" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="50" cy="54" r="27" fill="#e9e4d8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="50" cy="50" r="12" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+      <div class="hme" id="hme"><svg viewBox="0 0 100 100" aria-hidden="true">
         
       </svg></div>
       <div class="hw" id="hwN" style="left:50%;top:30%"></div><div class="hw" id="hwS" style="left:50%;top:70%"></div>
@@ -138,11 +134,7 @@ h1{font-size:18px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
     <div class="starts"><button type="button" class="start" id="startEasy"></button><button type="button" class="start" id="startHard"></button></div>
   </section>
   <section id="game" hidden>
-    <div class="top"><div class="ttl"><h1><span class="mini" id="miniChar"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L63 24 L37 24 Z" fill="#8a6f4d"/>
-        <circle cx="21" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="79" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="50" cy="54" r="27" fill="#e9e4d8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="50" cy="50" r="12" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+    <div class="top"><div class="ttl"><h1><span class="mini" id="miniChar"><svg viewBox="0 0 100 100" aria-hidden="true">
         
       </svg></span><span id="title"></span></h1><div class="score" id="score"></div></div></div>
   <div id="board">
@@ -151,11 +143,7 @@ h1{font-size:18px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
     <div class="cell" id="cell-1" data-s="1" style="grid-row:1;grid-column:3"></div>
     <div class="cell" id="cell-6" data-s="6" style="grid-row:2;grid-column:1"></div>
     <div class="center">
-      <svg id="char" viewBox="0 0 100 100" data-facing="0" aria-label="character"><path d="M50 4 L63 24 L37 24 Z" fill="#8a6f4d"/>
-        <circle cx="21" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="79" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="50" cy="54" r="27" fill="#e9e4d8" stroke="#3b3a36" stroke-width="2"/>
-        <circle cx="50" cy="50" r="12" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+      <svg id="char" viewBox="0 0 100 100" data-facing="0" aria-label="character">
         
       </svg>
     </div>
@@ -349,10 +337,138 @@ park:svg(GR+`<rect x="14" y="36" width="5" height="20" fill="${cT}"/><circle cx=
 mart:svg(GR+`<path d="M16 20H56L50 40H22Z" fill="${cB}"/><path d="M6 12H13L22 40"/><path d="M28 20L30 40M38 20V40M48 20L46 40"/><circle cx="26" cy="48" r="4" fill="${cT}"/><circle cx="46" cy="48" r="4" fill="${cT}"/><rect x="24" y="10" width="10" height="10" fill="${cG}"/><circle cx="44" cy="15" r="5" fill="${cR}"/>`)
 };
 
+/* ============ 角色：八隻俯視小動物（頭朝上＝前面），每一題隨機換一隻 ============ */
+const ANIMALS=(()=>{
+const INK='#3b3a36',CB='#efe9dc',CT='#d2b68a',CT2='#b8956a',CG='#9fb890',CG2='#7f9c72',CW='#fffdf8',CR='#e3a6a0',BR='#7a5a3c',BR2='#5e4329',YE='#f0d98a',YE2='#d9b85c',OR='#e09a4a',DK='#4a4945',DK2='#2f2e2b',GR='#4f8a5b',RD='#d55a4e',GY='#b9b6ae';
+const G=x=>`<g stroke="${INK}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${x}</g>`;
+const el=(cx,cy,rx,ry,f,rot)=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${f}"${rot?` transform="rotate(${rot} ${cx} ${cy})"`:''}/>`;
+const ci=(cx,cy,r,f)=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${f}"/>`;
+const ln=(d,w=1.2,c=INK)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}"/>`;
+const pa=(d,f)=>`<path d="${d}" fill="${f}"/>`;
+const toes=(x,y,dir=1)=>ln(`M${x-3} ${y-dir*4}v${dir*3}M${x} ${y-dir*5}v${dir*4}M${x+3} ${y-dir*4}v${dir*3}`,1.1);
+const ANIMALS=[
+{id:'dog',svg:G(
+ // 尾巴（白尖）
+ pa('M46 84Q42 96 52 99Q60 92 54 84Z',CT2)+pa('M49 94Q52 99 56 95Q54 92 49 94Z',CW)+
+ // 四隻腳掌
+ el(29,48,7,9.5,CT)+el(71,48,7,9.5,CT)+el(31,74,7.5,9.5,CT)+el(69,74,7.5,9.5,CT)+
+ toes(29,41)+toes(71,41)+toes(31,67)+toes(69,67)+
+ // 身體＋背上深色鞍斑
+ el(50,60,19,27,CT)+pa('M38 50Q50 42 62 50Q66 68 58 82Q50 86 42 82Q34 68 38 50Z',CT2)+
+ ln('M44 56l2 3M50 52l1 4M56 56l-2 3M43 68l2 3M57 68l-2 3M50 66v4M47 77l1 3M53 77l-1 3',1)+
+ // 項圈
+ pa('M33 41Q50 49 67 41L66 46Q50 54 34 46Z',RD)+ci(50,52,2.4,YE2)+
+ // 垂耳（在頭兩側）
+ pa('M33 20Q22 22 24 38Q27 46 35 42Q38 32 36 22Z',BR)+pa('M67 20Q78 22 76 38Q73 46 65 42Q62 32 64 22Z',BR)+
+ ln('M28 28Q27 36 31 40M72 28Q73 36 69 40',1,BR2)+
+ // 頭頂（白色額線）＋口鼻往前突出
+ el(50,24,15,17,CT)+el(50,9,7.5,6,CT)+pa('M47.5 38Q46 20 49 8H51Q54 20 52.5 38Z',CB)+
+ ln('M40 22q2-3 4-1M60 22q-2-3-4-1M41 30q2-2 4-1M59 30q-2-2-4-1',1))},
+{id:'cat',svg:G(
+ // 尾巴（條紋、彎一圈）
+ ln('M50 84Q80 96 80 66',10,INK)+ln('M50 84Q80 96 80 66',6.4,CT)+
+ ln('M60 92l2-5M68 93l1-6M75 88l-2-5M79 80l-4-2M80 72l-5-1',2.2,CT2)+
+ el(31,47,6.5,9,CB)+el(69,47,6.5,9,CB)+el(33,76,7,9,CB)+el(67,76,7,9,CB)+
+ toes(31,40)+toes(69,40)+toes(33,69)+toes(67,69)+
+ // 身體＋虎斑
+ el(50,60,18.5,27,CT)+
+ ln('M32 52Q38 54 42 52M58 52Q62 54 68 52M31 62Q38 64 43 62M57 62Q62 64 69 62M33 72Q39 74 44 72M56 72Q61 74 67 72',2.4,CT2)+
+ ln('M50 40V80',2.4,CT2)+ln('M46 46l-3-4M54 46l3-4',1.4,CT2)+
+ // 耳朵
+ pa('M35 22L30 5L46 14Z',CT)+pa('M65 22L70 5L54 14Z',CT)+pa('M36 19L33 9L43 14Z',CR)+pa('M64 19L67 9L57 14Z',CR)+
+ // 頭頂
+ el(50,29,16,15,CT)+ln('M50 14V24M44 15l2 8M56 15l-2 8',2.2,CT2)+ln('M36 28q4-2 6 1M64 28q-4-2-6 1',1.4,CT2))},
+{id:'rabbit',svg:G(
+ ci(50,91,6.5,CW)+ln('M46 88l1 3M50 86v4M54 88l-1 3',.9,GY)+
+ // 後腳（大）、前腳
+ el(29,76,8,12,CW,-8)+el(71,76,8,12,CW,8)+toes(29,68)+toes(71,68)+
+ el(33,50,5.5,8,CW)+el(67,50,5.5,8,CW)+
+ el(50,64,20,25,CW)+ln('M38 56q3 3 6 0M56 56q3 3 6 0M36 68q4 3 8 0M56 68q4 3 8 0M42 80q4 2 8 0M52 80q4 2 8 0',1,GY)+
+ // 長耳（往前往上）
+ el(40,15,6.5,14,CW,-6)+el(60,15,6.5,14,CW,6)+el(40,16,3,10,CR,-6)+el(60,16,3,10,CR,6)+
+ ln('M38 8q2 4 0 8M62 8q-2 4 0 8',.9,CT)+
+ // 頭頂
+ el(50,38,14,13,CW)+ln('M44 32q3 2 6 0M50 32q3 2 6 0M42 40q4 2 8 0M50 40q4 2 8 0',1,GY))},
+{id:'panda',svg:G(
+ ci(50,92,4.5,CW)+
+ // 後腳（黑）、前腳（黑，和肩帶連起來）
+ el(32,78,8.5,10,DK2)+el(68,78,8.5,10,DK2)+el(26,50,8,10,DK2,10)+el(74,50,8,10,DK2,-10)+
+ // 身體（白）＋黑色肩帶
+ el(50,63,19,26,CW)+pa('M31 46Q50 38 69 46Q70 56 66 60Q50 54 34 60Q30 56 31 46Z',DK2)+
+ ln('M44 72q3 3 6 0M52 80q3 2 6 0M40 82q3 2 6 0',1,GY)+
+ // 圓耳（黑）、頭頂（白）
+ ci(35,17,6.5,DK2)+ci(65,17,6.5,DK2)+ci(35,17,2.8,DK)+ci(65,17,2.8,DK)+
+ el(50,31,15.5,15,CW)+ln('M44 20q3-2 6 0M50 20q3-2 6 0M42 27q4-2 8 0M50 27q4-2 8 0',1,GY))},
+{id:'turtle',svg:G(
+ // 尾巴
+ pa('M45 90L50 99L55 90Z',CT)+
+ // 鰭狀肢
+ el(22,40,10,6.5,CT,-35)+el(78,40,10,6.5,CT,35)+el(25,77,10,6.5,CT,35)+el(75,77,10,6.5,CT,-35)+
+ ln('M16 35l4 3M18 41l5 1M84 35l-4 3M82 41l-5 1M19 80l5-2M81 80l-5-2',1,CT2)+
+ // 頭（伸出殼外）
+ el(50,16,8.5,10,CT)+ln('M46 10q4 2 8 0M46 16q4 2 8 0',1,CT2)+
+ // 殼：外圈邊緣盾片＋中間六角盾片
+ el(50,60,27,31,CG2)+el(50,60,23,27,CG)+
+ ln('M50 33V37M50 83V87M24 60h4M72 60h4M30 40l3 3M70 40l-3 3M30 80l3-3M70 80l-3-3',1.4)+
+ pa('M50 46l9 5.5v10.5l-9 5.5l-9-5.5V51.5z',CG2)+
+ ln('M50 46V37M59 51.5l9-5M59 62l9 5M50 67.5V83M41 62l-9 5M41 51.5l-9-5',1.5)+
+ ln('M41 51.5l-3 14M59 51.5l3 14',1,CG2)+ln('M44 38l-5 8M56 38l5 8M44 82l-5-8M56 82l5-8',1.2))},
+{id:'duck',svg:G(
+ // 尾羽（翹起）
+ pa('M42 84Q45 98 50 99Q55 98 58 84Z',YE2)+ln('M46 88v8M50 88v9M54 88v8',1,INK)+
+ // 兩側翅膀（疊羽）
+ pa('M30 46Q18 62 34 88L46 70L44 46Z',YE2)+pa('M70 46Q82 62 66 88L54 70L56 46Z',YE2)+
+ ln('M26 62l12 2M26 70l13 0M29 78l12-3M74 62l-12 2M74 70l-13 0M71 78l-12-3',1.1,CT2)+
+ // 身體
+ el(50,60,14,24,YE)+ln('M44 50q3 2 6 0M50 50q3 2 6 0M43 60q3 2 6 0M51 60q3 2 6 0M44 70q3 2 6 0M51 70q3 2 6 0',1,YE2)+
+ // 頭頂（綠頭）＋扁嘴往前
+ pa('M42 12Q50 -1 58 12L56 18L44 18Z',OR)+ln('M50 4V12',1,YE2)+
+ el(50,30,13,14,GR)+ln('M42 24q3-2 6 0M50 24q3-2 6 0M42 32q4-2 8 0M50 32q4-2 8 0',1,'#35653f')+
+ pa('M38 42Q50 48 62 42L61 46Q50 52 39 46Z',CW))},
+{id:'dino',svg:G(
+ // 長尾巴＋尾刺
+ pa('M40 74Q44 94 50 101Q56 94 60 74Z',CG)+pa('M45 90l-6 1l6 4zM55 90l6 1l-6 4z',CR)+
+ // 四肢
+ el(27,50,8.5,6.5,CG2,-20)+el(73,50,8.5,6.5,CG2,20)+el(29,76,9.5,7.5,CG2,20)+el(71,76,9.5,7.5,CG2,-20)+
+ // 身體
+ el(50,62,19,24,CG)+ln('M38 56q4 3 8 0M54 56q4 3 8 0M37 68q4 3 8 0M55 68q4 3 8 0',1,CG2)+
+ // 背板（左右交錯兩排）
+ pa('M50 80L44 72L50 66L56 72Z',CR)+pa('M50 66L44 58L50 52L56 58Z',CR)+pa('M50 52L45 45L50 39L55 45Z',CR)+pa('M50 92L47 86L50 82L53 86Z',CR)+
+ ln('M50 66V80M50 52V66M50 39V52',.9,'#a8665f')+
+ // 脖子與頭頂（沒有臉）
+ pa('M40 40Q38 28 44 20Q47 10 50 8Q53 10 56 20Q62 28 60 40Q50 46 40 40Z',CG)+
+ ln('M45 22q5 3 10 0M44 30q6 3 12 0',1.1,CG2)+pa('M47 14l3-6l3 6z',CG2))},
+{id:'penguin',svg:G(
+ // 小腳露在尾巴
+ el(43,93,5.5,3,OR)+el(57,93,5.5,3,OR)+pa('M44 86L50 97L56 86Z',DK)+
+ // 兩側鰭（張開）
+ pa('M33 46Q16 60 18 78Q22 82 30 70Q34 62 36 54Z',DK)+pa('M67 46Q84 60 82 78Q78 82 70 70Q66 62 64 54Z',DK)+
+ ln('M24 66l6-6M24 72l8-8M76 66l-6-6M76 72l-8-8',1,DK2)+
+ // 背：黑，邊緣露出一點白肚
+ el(50,62,20,27,DK)+pa('M30 66Q28 78 36 86Q32 76 33 68Z',CW)+pa('M70 66Q72 78 64 86Q68 76 67 68Z',CW)+
+ ln('M50 44V84',1,DK2)+ln('M44 52q3 2 6 0M50 52q3 2 6 0M43 64q3 2 7 0M50 64q3 2 7 0M44 76q3 2 6 0M50 76q3 2 6 0',.9,DK2)+
+ // 頭頂（黑）＋橘色黃斑在脖子兩側＋嘴尖往前
+ el(50,27,13,14,DK)+pa('M38 36Q41 44 46 42Q42 38 41 32Z',YE)+pa('M62 36Q59 44 54 42Q58 38 59 32Z',YE)+
+ pa('M47 14L50 3L53 14Z',OR)+ln('M44 22q3-2 6 0M50 22q3-2 6 0',.9,DK2))}
+];
+return ANIMALS;
+})();
+
+const DINO=ANIMALS.find(a=>a.id==='dino');
+function pickAnimal(prevId){const pool=ANIMALS.filter(a=>a.id!==prevId);return pool[Math.floor(Math.random()*pool.length)]}
+function setAnimal(a){
+  st.animal=a.id;
+  const ch=$('#char');ch.innerHTML=a.svg;ch.dataset.animal=a.id;
+}
+function setHomeAnimal(){
+  const a=pickAnimal(st.homeAnimal);st.homeAnimal=a.id;
+  const sv=document.querySelector('#hme svg');sv.innerHTML=a.svg;$('#hme').dataset.animal=a.id;
+}
+
 /* ============ 遊戲 ============ */
 const ROUNDS=10;
 const TIME_LIMIT=10;
-const st={timerId:0,lowId:0,cells:[],facing:0,angle:0,q:null,answered:false,n:0,score:0,spinning:false,dtab:'places',token:0};
+const st={animal:'',homeAnimal:'',timerId:0,lowId:0,cells:[],facing:0,angle:0,q:null,answered:false,n:0,score:0,spinning:false,dtab:'places',token:0};
 const $=s=>document.querySelector(s);
 const pn=p=>simp()?p.zs:p.zh;
 const dn=d=>simp()?d.zs:d.zh;
@@ -395,7 +511,7 @@ function startGame(mode){
   showGameView(true);newGame();renderDict();
 }
 function showHome(){
-  newGame();showGameView(false);$('#cfm').hidden=true;$('#end').hidden=true;update();
+  newGame();setHomeAnimal();showGameView(false);$('#cfm').hidden=true;$('#end').hidden=true;update();
 }
 function openConfirm(){
   stopTimer();
@@ -408,6 +524,7 @@ function newGame(){
   st.n=0;st.score=0;st.q=null;st.answered=false;st.spinning=false;st.facing=0;st.angle=0;
   const ch=$('#char');ch.classList.add('noanim');ch.style.transform='rotate(0deg)';ch.dataset.facing='0';
   void ch.offsetWidth;ch.classList.remove('noanim');
+  setAnimal(pickAnimal(st.animal));
   const ids=allowedCells();const ps=shuffle(PLACES).slice(0,ids.length);
   st.cells=Array(8).fill(null);ids.forEach((c,i)=>st.cells[c]=ps[i]);
   $('#end').hidden=true;
@@ -419,6 +536,7 @@ function spin(){
   const f=pick(allowedCells());
   const delta=((f-st.facing+8)%8)*45;
   st.angle+=720+delta;st.facing=f;st.q=null;st.answered=false;st.spinning=true;
+  setAnimal(pickAnimal(st.animal));
   const ch=$('#char');ch.style.transform='rotate('+st.angle+'deg)';ch.dataset.facing=String(f);
   const tk=st.token;
   update();
@@ -596,7 +714,7 @@ $('#cfmStay').onclick=closeConfirm;
 $('#cfm').addEventListener('click',e=>{if(e.target.id==='cfm')closeConfirm()});
 // 開始畫面四個地點
 $('#hcN').innerHTML=ICON.cafe;$('#hcE').innerHTML=ICON.bank;$('#hcS').innerHTML=ICON.lib;$('#hcW').innerHTML=ICON.park;
-newGame();showGameView(false);update();
+newGame();setHomeAnimal();document.querySelector('#miniChar svg').innerHTML=DINO.svg;showGameView(false);update();
 </script>
 </body>
 </html>

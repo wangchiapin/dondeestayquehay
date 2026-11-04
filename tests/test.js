@@ -120,6 +120,44 @@ async function fullGame(page, mode) {
   url = 'http://127.0.0.1:' + srv.address().port + '/';
   browser = await chromium.launch();
 
+  // ===== 角色：八隻小動物，每一題隨機換 =====
+  console.log('== 角色動物 ==');
+  {
+    let a = await fresh(null, { home: true });
+    const info = await a.evaluate(() => ({ ids: ANIMALS.map(x => x.id), svgs: ANIMALS.map(x => x.svg), dino: DINO.id }));
+    ok(info.ids.join(',') === 'dog,cat,rabbit,panda,turtle,duck,dino,penguin', '八隻動物：' + info.ids.join('、'));
+    ok(new Set(info.svgs).size === 8 && info.svgs.every(s => s.includes('<ellipse') || s.includes('<circle')), '八隻畫法各不相同');
+    ok(info.dino === 'dino', '標題旁小圖固定是恐龍');
+    ok(await a.$eval('#hme', e => ANIMALS.some(x => x.id === e.dataset.animal)) && await a.$eval('#hme svg', e => e.querySelectorAll('ellipse,circle,path').length >= 3), '開始畫面的角色是其中一隻動物');
+    await a.evaluate(() => { window.norm = s => { const x = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); x.innerHTML = s; return x.innerHTML; }; });
+    ok(await a.$eval('#miniChar svg', e => e.innerHTML === norm(DINO.svg)), '遊戲標題旁的小轉圈圖是恐龍');
+    // 抽選：不會連續兩次同一隻，八隻都會出現
+    const draw = await a.evaluate(() => { const seen = new Set(); let prev = '', same = 0; for (let i = 0; i < 400; i++) { const x = pickAnimal(prev); if (x.id === prev) same++; seen.add(x.id); prev = x.id; } return { n: seen.size, same }; });
+    ok(draw.n === 8 && draw.same === 0, '抽 400 次：八隻都出現過，沒有連續兩次同一隻');
+    // 遊戲中每一題換一隻
+    await a.click('#startEasy');
+    const seq = [];
+    for (let i = 0; i < 5; i++) {
+      await a.click('#spin');
+      await a.waitForSelector('.opt:not([disabled])', { timeout: 6000 });
+      seq.push(await a.$eval('#char', e => e.dataset.animal));
+      ok(await a.$eval('#char', e => e.querySelectorAll('ellipse,circle,path').length >= 3 && e.innerHTML === norm(ANIMALS.find(x => x.id === e.dataset.animal).svg)), '第 ' + (i + 1) + ' 題的角色是 ' + seq[i]);
+      await a.click('.opt[data-correct="1"]');
+    }
+    ok(seq.every((x, i) => i === 0 || x !== seq[i - 1]), '五題的角色：' + seq.join('→') + '（前後不重複）');
+    ok(new Set(seq).size >= 3, '五題至少換了三種不同動物');
+    ok((await a.$eval('#cell-0', e => e.dataset.name)) !== undefined, '角色換了之後棋盤正常');
+    // 角色轉向仍正確（用任一動物）
+    const ang = await a.evaluate(() => { const ch = document.querySelector('#char'); const m = /rotate\((-?[\d.]+)deg\)/.exec(ch.style.transform); return { angle: +m[1], facing: +ch.dataset.facing }; });
+    ok(((ang.angle % 360) + 360) % 360 === ang.facing * 45, '換了動物之後，轉角仍等於朝向 × 45°');
+    // 回主選單再開始，開始畫面會換動物
+    await a.click('#bHome'); await a.click('#cfmLeave');
+    const homeSeq = [];
+    for (let i = 0; i < 4; i++) { homeSeq.push(await a.$eval('#hme', e => e.dataset.animal)); await a.click('#startEasy'); await a.click('#bHome'); await a.click('#cfmLeave'); }
+    ok(new Set(homeSeq).size >= 2 && homeSeq.every((x, i) => i === 0 || x !== homeSeq[i - 1]), '每次回到開始畫面角色會換：' + homeSeq.join('→'));
+    await a.context().close();
+  }
+
   // ===== 開始畫面（主選單）、🏠 警語、名稱與縮圖 =====
   console.log('== 開始畫面（主選單） ==');
   {
@@ -203,6 +241,13 @@ async function fullGame(page, mode) {
     ok(meta['twitter:card'] === 'summary_large_image', 'twitter:card');
     ok(await g.$eval('link[rel="icon"]', e => e.getAttribute('href')) === 'icon.png' && await g.$eval('link[rel="apple-touch-icon"]', e => e.getAttribute('href')) === 'icon.png', '桌面小圖示連結');
     await g.context().close();
+    const root = path.resolve(__dirname, '..');
+    const jpg = fs.readFileSync(path.join(root, 'og.jpg'));
+    let jw = 0, jh = 0;
+    for (let i = 2; i < jpg.length;) { if (jpg[i] !== 0xFF) break; const mk = jpg[i + 1]; const len = jpg.readUInt16BE(i + 2); if (mk >= 0xC0 && mk <= 0xC3) { jh = jpg.readUInt16BE(i + 5); jw = jpg.readUInt16BE(i + 7); break; } i += 2 + len; }
+    ok(jpg[0] === 0xFF && jpg[1] === 0xD8 && jw === 1200 && jh === 630, 'og.jpg 存在，是 1200×630 的 JPEG');
+    const png = fs.readFileSync(path.join(root, 'icon.png'));
+    ok(png.slice(1, 4).toString() === 'PNG' && png.readUInt32BE(16) === 512 && png.readUInt32BE(20) === 512, 'icon.png 存在，是 512×512 的 PNG');
   }
 
   // ===== 1. 初始畫面、預設值、設定視窗 =====
