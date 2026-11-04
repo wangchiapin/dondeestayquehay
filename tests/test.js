@@ -382,6 +382,36 @@ async function fullGame(page, mode) {
   await page.click('#dClose');
   await page.context().close();
 
+  // ===== 讀音：以 GoodTeacher 規則＋共用轉換器核對過的結果，凍結在這裡 =====
+  console.log('== 讀音 ==');
+  page = await fresh();
+  const FROZEN_PLACES = {
+    cafe:['kāfēitīng','ㄎㄚ ㄈㄟ ㄊㄧㄥ'], lib:['túshūguǎn','ㄊㄨˊ ㄕㄨ ㄍㄨㄢˇ'], bank:['yínháng','ㄧㄣˊ ㄏㄤˊ'],
+    post:['yóujú','ㄧㄡˊ ㄐㄩˊ'], cvs:['biànlì shāngdiàn','ㄅㄧㄢˋ ㄌㄧˋ ㄕㄤ ㄉㄧㄢˋ'], hosp:['yīyuàn','ㄧ ㄩㄢˋ'],
+    school:['xuéxiào','ㄒㄩㄝˊ ㄒㄧㄠˋ'], night:['yèshì','ㄧㄝˋ ㄕˋ'], mrt:['jiéyùnzhàn','ㄐㄧㄝˊ ㄩㄣˋ ㄓㄢˋ'],
+    pharm:['yàojú','ㄧㄠˋ ㄐㄩˊ'], park:['gōngyuán','ㄍㄨㄥ ㄩㄢˊ'], mart:['chāoshì','ㄔㄠ ㄕˋ'] };
+  const FROZEN_DIRS = [
+    ['qiánmiàn','ㄑㄧㄢˊ ㄇㄧㄢˋ'], ['yòu qiánmiàn','ㄧㄡˋ ㄑㄧㄢˊ ㄇㄧㄢˋ'], ['yòubiān','ㄧㄡˋ ㄅㄧㄢ'],
+    ['yòu hòumiàn','ㄧㄡˋ ㄏㄡˋ ㄇㄧㄢˋ'], ['hòumiàn','ㄏㄡˋ ㄇㄧㄢˋ'], ['zuǒ hòumiàn','ㄗㄨㄛˇ ㄏㄡˋ ㄇㄧㄢˋ'],
+    ['zuǒbiān','ㄗㄨㄛˇ ㄅㄧㄢ'], ['zuǒ qiánmiàn','ㄗㄨㄛˇ ㄑㄧㄢˊ ㄇㄧㄢˋ'] ];
+  const FROZEN_W = { zai:['zài','ㄗㄞˋ'], wo:['wǒ','ㄨㄛˇ'], de:['de','˙ㄉㄜ'], you:['yǒu','ㄧㄡˇ'], nali:['nǎlǐ','ㄋㄚˇ ㄌㄧˇ'], shme:['shénme','ㄕㄣˊ ˙ㄇㄜ'] };
+  const data = await page.evaluate(() => ({ P: PLACES, D: DIRS, W }));
+  ok(data.P.every(p => JSON.stringify([p.py, p.zy]) === JSON.stringify(FROZEN_PLACES[p.id])), '12 個地點的拼音與注音和核對結果一致');
+  ok(data.D.every((d, i) => d.py === FROZEN_DIRS[i][0] && d.zy === FROZEN_DIRS[i][1]), '8 個方位詞的拼音與注音和核對結果一致');
+  ok(Object.keys(FROZEN_W).every(k => data.W[k].py === FROZEN_W[k][0] && data.W[k].zy === FROZEN_W[k][1]), '在／我／的／有／哪裡／什麼 的拼音與注音一致');
+  const syl = /^˙?[ㄅ-ㄩ]+[ˊˇˋ]?$/;
+  const allZy = [...data.P.map(p => p.zy), ...data.D.map(d => d.zy), ...Object.values(data.W).map(w => w.zy)];
+  ok(allZy.every(z => z.split(' ').every(x => syl.test(x))), '每個注音音節格式正確（輕聲點在前面，例如 ˙ㄉㄜ）');
+  ok(!allZy.some(z => /[ㄅ-ㄩ]˙/.test(z)), '沒有把輕聲點寫在音節後面');
+  ok(data.P.every(p => p.zy.split(' ').length === [...p.zh].length) && data.D.every(d => d.zy.split(' ').length === [...d.zh].length), '注音音節數＝漢字數');
+  // 畫面上：回饋句與題目的注音有輕聲點
+  await openSet(page); await opt(page, 'phon', 'zhuyin'); await closeSet(page);
+  await spinToQuestion(page);
+  await page.click('.opt[data-i="0"]');
+  const fbzy = await page.$eval('#fb .qp', e => e.textContent);
+  ok(fbzy.includes('˙ㄉㄜ') && !/ㄜ˙/.test(fbzy), '回饋句的「的」注音為 ˙ㄉㄜ：' + fbzy);
+  await page.context().close();
+
   // ===== 10. 完整玩一輪（簡單、困難） =====
   console.log('== 簡單：完整 10 題 ==');
   page = await fresh();
