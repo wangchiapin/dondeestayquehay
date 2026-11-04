@@ -3,15 +3,48 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>轉一轉・方位詞 Gira y ubica</title>
+<title>方位轉轉轉・¡Gira y ubica!</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="每天一分鐘 · Cada día unos minutos">
+<meta property="og:title" content="方位轉轉轉 · ¡Gira y ubica!">
+<meta property="og:description" content="轉一圈，找找看！練習前後左右和「有」「在」 · Gira, mira y ubica: practica izquierda, derecha, delante y detrás">
+<meta property="og:url" content="https://wangchiapin.github.io/dondeestayquehay/">
+<meta property="og:image" content="https://wangchiapin.github.io/dondeestayquehay/og.jpg?v=20261104">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <style>
-:root{--bg:#f7f5f0;--ink:#3b3a36;--sub:#8b877c;--line:#d8d4ca;--card:#fffdf8;--accent:#8a6f4d;--ok:#5f8a63;--bad:#b0605a}
+:root{--ring:#cdbfa6;--bg:#f7f5f0;--ink:#3b3a36;--sub:#8b877c;--line:#d8d4ca;--card:#fffdf8;--accent:#8a6f4d;--ok:#5f8a63;--bad:#b0605a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
 #app{position:relative;max-width:480px;margin:0 auto;padding:8px 14px calc(16px + env(safe-area-inset-bottom))}
-.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px}
+.top{display:flex;align-items:center;gap:8px;margin:0 0 6px;padding-right:134px;min-height:38px}
+.gear[hidden]{display:none}
+.close small,#cfmText small{display:block;font-size:11px;opacity:.8;font-weight:400;margin-top:2px}
+.icons{position:absolute;top:8px;right:14px;display:flex;gap:6px;z-index:3}
+#home[hidden],#game[hidden]{display:none}
+.stage{position:relative;width:min(320px,84vw);aspect-ratio:1/1;margin:58px auto 0}
+.ring{position:absolute;inset:17%;border:2px dashed var(--ring);border-radius:50%}
+.hc{position:absolute;width:21%;aspect-ratio:1/1;background:var(--card);border:2px solid var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center}
+.hc svg{width:70%;height:70%}
+.hme{position:absolute;left:50%;top:50%;width:23%;aspect-ratio:1/1;margin:-11.5% 0 0 -11.5%}
+.hme svg{width:100%;height:100%;animation:slowspin 24s linear infinite}
+.hw{position:absolute;transform:translate(-50%,-50%);font-size:15px;color:var(--accent);letter-spacing:1px}
+@keyframes slowspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.hme svg,.mini svg{animation:none}}
+.bigt{text-align:center;font-size:42px;margin:14px 0 0;font-weight:700;letter-spacing:5px;white-space:nowrap}
+.bigt span.t,h1 span.t{display:inline-block}
+.hsub{text-align:center;color:var(--sub);font-size:16px;margin-top:4px}
+.starts{display:flex;flex-direction:column;gap:10px;margin:22px 8px 0}
+.start{font:inherit;font-size:18px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);text-align:center}
+.start small{display:block;font-size:11px;opacity:.85}
+.start.main{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mini{display:inline-block;width:24px;height:24px;vertical-align:-5px;margin-right:6px}
+.mini svg{width:100%;height:100%;animation:slowspin 12s linear infinite}
+.btns2{display:flex;gap:10px;margin-top:12px}.btns2 .close{margin:0;flex:1}
 .ttl{min-width:0}
-h1{font-size:18px;margin:0;font-weight:600;letter-spacing:1px;white-space:nowrap}
+h1{font-size:18px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap}
 .score{font-size:13px;color:var(--sub);margin-top:1px}
 .icons{display:flex;gap:6px;flex:none}
 .gear{width:38px;height:38px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:18px;display:flex;align-items:center;justify-content:center}
@@ -82,22 +115,48 @@ h1{font-size:18px;margin:0;font-weight:600;letter-spacing:1px;white-space:nowrap
 </head>
 <body>
 <div id="app">
-  <div class="top">
-    <div class="ttl"><h1 id="title"></h1><div class="score" id="score"></div></div>
-    <div class="icons"><button type="button" class="gear" id="bDict">📖</button><button type="button" class="gear" id="gear">⚙️</button></div>
-  </div>
+  <div class="icons"><button type="button" class="gear" id="bHome" hidden>🏠</button><button type="button" class="gear" id="bDict">📖</button><button type="button" class="gear" id="gear">⚙️</button></div>
+  <section id="home">
+    <div class="stage" aria-hidden="true">
+      <div class="ring"></div>
+      <div class="hc" id="hcN" style="left:39.5%;top:0"></div>
+      <div class="hc" id="hcE" style="right:0;top:39.5%"></div>
+      <div class="hc" id="hcS" style="left:39.5%;bottom:0"></div>
+      <div class="hc" id="hcW" style="left:0;top:39.5%"></div>
+      <div class="hme" id="hme"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L63 24 L37 24 Z" fill="#8a6f4d"/>
+        <circle cx="21" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+        <circle cx="79" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+        <circle cx="50" cy="54" r="27" fill="#e9e4d8" stroke="#3b3a36" stroke-width="2"/>
+        <circle cx="50" cy="50" r="12" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+        
+      </svg></div>
+      <div class="hw" id="hwN" style="left:50%;top:30%"></div><div class="hw" id="hwS" style="left:50%;top:70%"></div>
+      <div class="hw" id="hwW" style="left:30%;top:50%"></div><div class="hw" id="hwE" style="left:70%;top:50%"></div>
+    </div>
+    <div class="bigt" id="hTitle"></div>
+    <div class="hsub" id="hSub"></div>
+    <div class="starts"><button type="button" class="start" id="startEasy"></button><button type="button" class="start" id="startHard"></button></div>
+  </section>
+  <section id="game" hidden>
+    <div class="top"><div class="ttl"><h1><span class="mini" id="miniChar"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L63 24 L37 24 Z" fill="#8a6f4d"/>
+        <circle cx="21" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+        <circle cx="79" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+        <circle cx="50" cy="54" r="27" fill="#e9e4d8" stroke="#3b3a36" stroke-width="2"/>
+        <circle cx="50" cy="50" r="12" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+        
+      </svg></span><span id="title"></span></h1><div class="score" id="score"></div></div></div>
   <div id="board">
     <div class="cell" id="cell-7" data-s="7" style="grid-row:1;grid-column:1"></div>
     <div class="cell" id="cell-0" data-s="0" style="grid-row:1;grid-column:2"></div>
     <div class="cell" id="cell-1" data-s="1" style="grid-row:1;grid-column:3"></div>
     <div class="cell" id="cell-6" data-s="6" style="grid-row:2;grid-column:1"></div>
     <div class="center">
-      <svg id="char" viewBox="0 0 100 100" data-facing="0" aria-label="character">
-        <path d="M50 4 L63 24 L37 24 Z" fill="#8a6f4d"/>
+      <svg id="char" viewBox="0 0 100 100" data-facing="0" aria-label="character"><path d="M50 4 L63 24 L37 24 Z" fill="#8a6f4d"/>
         <circle cx="21" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
         <circle cx="79" cy="50" r="7" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
         <circle cx="50" cy="54" r="27" fill="#e9e4d8" stroke="#3b3a36" stroke-width="2"/>
         <circle cx="50" cy="50" r="12" fill="#fffdf8" stroke="#3b3a36" stroke-width="2"/>
+        
       </svg>
     </div>
     <div class="cell" id="cell-2" data-s="2" style="grid-row:2;grid-column:3"></div>
@@ -107,6 +166,7 @@ h1{font-size:18px;margin:0;font-weight:600;letter-spacing:1px;white-space:nowrap
   </div>
   <div id="tbar"><i></i></div>
   <section id="qbox"><div id="qc"></div><button type="button" id="spin"></button><div id="qf"></div></section>
+  </section>
 </div>
 
 <div class="modal" id="dict" hidden>
@@ -125,11 +185,18 @@ h1{font-size:18px;margin:0;font-weight:600;letter-spacing:1px;white-space:nowrap
   <div class="mbox" id="setbox"></div>
 </div>
 
+<div class="modal" id="cfm" hidden>
+  <div class="mbox">
+    <div class="q" id="cfmText" style="text-align:center;font-size:18px"></div>
+    <div class="btns2"><button type="button" class="close" id="cfmLeave"></button><button type="button" class="close" id="cfmStay" style="background:var(--ink);color:var(--bg)"></button></div>
+  </div>
+</div>
+
 <div class="modal" id="end" hidden>
   <div class="mbox">
     <div class="big">🎉</div>
     <div class="q" id="endText" style="text-align:center"></div>
-    <button type="button" class="close" id="again"></button>
+    <div class="btns2"><button type="button" class="close" id="endHome"></button><button type="button" class="close" id="again"></button></div>
   </div>
 </div>
 
@@ -170,7 +237,7 @@ function saveG(){ try{ localStorage.setItem(GAME_KEY, JSON.stringify(G)); }catch
 
 /* ============ 介面文字：[繁, 簡, 西, 英]；簡體仍用台灣用字 ============ */
 const T = {
-  title:['轉一轉・方位詞','转一转・方位词','Gira y ubica · Direcciones relativas','Spin and Locate · Relative Directions'],
+  title:['方位轉轉轉','方位转转转','¡Gira y ubica!','Spin and Locate'],
   spin:['🔄 旋轉','🔄 旋转','Girar','Spin'],
   turning:['轉動中…','转动中…','Girando…','Spinning…'],
   next:['下一題','下一题','Siguiente','Next'],
@@ -209,6 +276,11 @@ const T = {
   hide:['隱藏','隐藏','Ocultar','Hide'],
   hintLbl:['方位提示','方位提示','Pista de dirección','Direction hint'],
   done:['完成','完成','Listo','Done'],
+  menu:['主選單','主选单','Menú','Menu'],
+  leave:['回主選單','回主选单','Volver al menú','Back to menu'],
+  stay:['繼續玩','继续玩','Seguir jugando','Keep playing'],
+  confirmMenu:['要回到主選單嗎？目前這一局的進度會消失。','要回到主选单吗？目前这一局的进度会消失。','¿Volver al menú? Se perderá el progreso de esta partida.','Go back to the main menu? Progress in this round will be lost.'],
+  dFront:['前','前','',''],dBack:['後','后','',''],dLeft:['左','左','',''],dRight:['右','右','',''],
   where:['哪裡','哪里','',''],
   what:['什麼','什么','',''],
   gzai:['在','在','estar (ubicación)','to be (located)'],
@@ -308,10 +380,29 @@ function timeUp(){
   st.answered=true;st.n++;st.q.picked=-1;
   stopTimer();update();
 }
-const modalOpen=()=>!$('#setov').hidden||!$('#dict').hidden;
+const modalOpen=()=>!$('#setov').hidden||!$('#dict').hidden||!$('#cfm').hidden;
 function goNext(){
   if(st.n>=ROUNDS)showEnd();else spin();
 }
+// 標題：「轉轉轉」微微歪斜，像在旋轉
+const TILT=[-6,0,8,-8,6];
+function titleHtml(){return [...tr('title')].map((c,i)=>'<span class="t" style="transform:rotate('+(TILT[i]||0)+'deg)">'+c+'</span>').join('')}
+function showGameView(on){
+  $('#home').hidden=on;$('#game').hidden=!on;$('#bHome').hidden=!on;
+}
+function startGame(mode){
+  if(G.mode!==mode){G.mode=mode;saveG();}
+  showGameView(true);newGame();renderDict();
+}
+function showHome(){
+  newGame();showGameView(false);$('#cfm').hidden=true;$('#end').hidden=true;update();
+}
+function openConfirm(){
+  stopTimer();
+  $('#cfmText').innerHTML=L('confirmMenu');$('#cfmLeave').innerHTML=L('leave');$('#cfmStay').innerHTML=L('stay');
+  $('#cfm').hidden=false;
+}
+function closeConfirm(){$('#cfm').hidden=true;if(!modalOpen())startTimer()}
 function newGame(){
   st.token++;stopTimer();
   st.n=0;st.score=0;st.q=null;st.answered=false;st.spinning=false;st.facing=0;st.angle=0;
@@ -368,7 +459,11 @@ function fullSentence(q){
 
 function update(){
   document.documentElement.lang=SETTINGS.lang==='en'?'en':(SETTINGS.lang==='es'?'es':(simp()?'zh-CN':'zh-TW'));
-  $('#title').textContent=tr('title');
+  const th=titleHtml();$('#title').innerHTML=th;$('#hTitle').innerHTML=th;$('#hSub').textContent=fo('title');
+  $('#startEasy').innerHTML=L('easy');$('#startHard').innerHTML=L('hard');
+  $('#startEasy').className='start'+(G.mode==='easy'?' main':'');$('#startHard').className='start'+(G.mode==='hard'?' main':'');
+  $('#hwN').textContent=tr('dFront');$('#hwS').textContent=tr('dBack');$('#hwW').textContent=tr('dLeft');$('#hwE').textContent=tr('dRight');
+  $('#bHome').setAttribute('aria-label',lab('menu'));$('#bHome').title=lab('menu');
   $('#gear').setAttribute('aria-label',lab('settings'));
   $('#bDict').setAttribute('aria-label',lab('dict'));$('#bDict').title=lab('dict');
   $('#score').textContent=st.n+' / '+ROUNDS+' '+tr('qn')+'　✓ '+st.score;
@@ -490,9 +585,18 @@ $('#setov').addEventListener('click',e=>{if(e.target.id==='setov')closeSet()});
 $('#bDict').onclick=()=>{renderDict();$('#dict').hidden=false;stopTimer()};
 $('#dClose').onclick=()=>{$('#dict').hidden=true;if(!modalOpen())startTimer()};
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{st.dtab=b.dataset.tab;renderDict()});
-function showEnd(){$('#endText').textContent=tr('end')+' '+st.score+' / '+ROUNDS;$('#again').textContent=lab('again');$('#end').hidden=false}
+function showEnd(){$('#endText').textContent=tr('end')+' '+st.score+' / '+ROUNDS;$('#again').textContent=lab('again');$('#endHome').textContent=lab('menu');$('#end').hidden=false}
 $('#again').onclick=newGame;
-newGame();
+$('#endHome').onclick=showHome;
+$('#startEasy').onclick=()=>startGame('easy');
+$('#startHard').onclick=()=>startGame('hard');
+$('#bHome').onclick=openConfirm;
+$('#cfmLeave').onclick=showHome;
+$('#cfmStay').onclick=closeConfirm;
+$('#cfm').addEventListener('click',e=>{if(e.target.id==='cfm')closeConfirm()});
+// 開始畫面四個地點
+$('#hcN').innerHTML=ICON.cafe;$('#hcE').innerHTML=ICON.bank;$('#hcS').innerHTML=ICON.lib;$('#hcW').innerHTML=ICON.park;
+newGame();showGameView(false);update();
 </script>
 </body>
 </html>

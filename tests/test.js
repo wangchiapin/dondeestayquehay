@@ -24,12 +24,18 @@ const ZY = /[ㄅ-ㄩ]/;                          // 注音符號
 
 let browser;
 const errors = [];
-async function fresh(init) {
+// 開始畫面按「簡單／困難」進遊戲（點上次存的難度那一顆）
+async function begin(page) {
+  const m = await page.evaluate(() => { try { return (JSON.parse(localStorage.getItem('fangwei')) || {}).mode; } catch (e) { return null; } });
+  await page.click(m === 'hard' ? '#startHard' : '#startEasy');
+}
+async function fresh(init, opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   if (init) await ctx.addInitScript(init);
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(url);
+  if (!opts.home) await begin(page);
   return page;
 }
 const stored = page => page.evaluate(k => JSON.parse(localStorage.getItem(k) || 'null'), KEY);
@@ -114,6 +120,91 @@ async function fullGame(page, mode) {
   url = 'http://127.0.0.1:' + srv.address().port + '/';
   browser = await chromium.launch();
 
+  // ===== 開始畫面（主選單）、🏠 警語、名稱與縮圖 =====
+  console.log('== 開始畫面（主選單） ==');
+  {
+    let h = await fresh(null, { home: true });
+    ok((await h.title()) === '方位轉轉轉・¡Gira y ubica!', '網頁標題：' + await h.title());
+    ok(await h.$eval('#home', e => !e.hidden) && await h.$eval('#game', e => e.hidden), '一打開是開始畫面，遊戲畫面還沒出現');
+    ok(await h.$eval('#bHome', e => getComputedStyle(e).display === 'none'), '開始畫面沒有 🏠');
+    ok(await h.$eval('#bDict', e => e.offsetParent !== null) && await h.$eval('#gear', e => e.offsetParent !== null), '開始畫面有 📖 和 ⚙️');
+    ok((await h.$eval('#hTitle', e => e.textContent)) === '方位轉轉轉' && (await h.$eval('#hSub', e => e.textContent)) === '¡Gira y ubica!', '大標題「方位轉轉轉」＋西文副標');
+    ok((await h.$$('#hTitle span.t')).length === 5, '標題五個字各自可歪斜');
+    const rots = await h.$$eval('#hTitle span.t', els => els.map(e => e.style.transform));
+    ok(new Set(rots).size > 2 && rots.slice(2).every(r => !r.includes('rotate(0deg)')), '「轉轉轉」三個字有歪斜');
+    ok((await h.$$eval('.hc svg', e => e.length)) === 4, '四個地點圖示');
+    ok((await h.$$eval('.hw', els => els.map(e => e.textContent).join(''))) === '前後左右', '前後左右四個字');
+    const gaps = await h.evaluate(() => {
+      const r = s => document.querySelector(s).getBoundingClientRect();
+      return { n: r('#hwN').top - r('#hcN').bottom, s: r('#hcS').top - r('#hwS').bottom, w: r('#hwW').left - r('#hcW').right, e: r('#hcE').left - r('#hwE').right };
+    });
+    ok(Object.values(gaps).every(g => g >= 15), '前後左右的字離圖片至少 15px：' + JSON.stringify(gaps));
+    ok(await h.$eval('#startEasy', e => e.classList.contains('main') && e.textContent.includes('簡單 4 方位')) && await h.$eval('#startHard', e => !e.classList.contains('main') && e.textContent.includes('困難 8 方位')), '兩顆開始鈕：預設「簡單」是主色');
+    ok(await h.$eval('#startEasy small', e => e.textContent.includes('Fácil')), '開始鈕有西文小字');
+    ok(await h.$eval('.hme svg', e => getComputedStyle(e).animationName === 'slowspin'), '角色在慢慢轉');
+    // 進困難
+    await h.click('#startHard');
+    ok(await h.$eval('#home', e => e.hidden) && await h.$eval('#game', e => !e.hidden), '按「困難」進入遊戲');
+    ok((await h.$$('.cell:not(.empty)')).length === 8, '困難：8 個地點');
+    ok((await storedGame(h)).mode === 'hard', '存檔 mode=hard');
+    ok(await h.$eval('#bHome', e => e.offsetParent !== null), '遊戲中有 🏠');
+    // 🏠 警語
+    await spinToQuestion(h);
+    ok(await tbarOn(h), '出題後倒數在跑');
+    const scoreBefore = await h.$eval('#score', e => e.textContent);
+    await h.click('#bHome');
+    ok(await h.$eval('#cfm', e => !e.hidden), '按 🏠 跳出警語');
+    const ct = await h.$eval('#cfmText', e => e.textContent);
+    ok(ct.includes('要回到主選單嗎') && ct.includes('進度會消失') && ct.includes('¿Volver al menú?'), '警語內容：' + ct);
+    ok((await h.$eval('#cfmLeave', e => e.textContent)).includes('回主選單') && (await h.$eval('#cfmStay', e => e.textContent)).includes('繼續玩'), '兩個按鈕：回主選單／繼續玩');
+    ok(!(await tbarOn(h)), '警語開著：倒數暫停');
+    await h.click('#cfmStay');
+    ok(await h.$eval('#cfm', e => e.hidden) && await h.$eval('#game', e => !e.hidden), '按「繼續玩」：回到遊戲');
+    ok(await tbarOn(h), '繼續玩：倒數重新開始');
+    ok((await h.$eval('#score', e => e.textContent)) === scoreBefore && await h.$('.opt:not([disabled])') !== null, '繼續玩：題目還在，進度沒掉');
+    await h.click('#bHome');
+    await h.mouse.click(5, 5);
+    ok(await h.$eval('#cfm', e => e.hidden), '點警語視窗外面也是「繼續玩」');
+    await h.click('#bHome');
+    await h.click('#cfmLeave');
+    ok(await h.$eval('#home', e => !e.hidden) && await h.$eval('#game', e => e.hidden) && await h.$eval('#cfm', e => e.hidden), '按「回主選單」：回到開始畫面');
+    ok(await h.$eval('#bHome', e => getComputedStyle(e).display === 'none'), '回到開始畫面後 🏠 不見');
+    ok(await h.$eval('#startHard', e => e.classList.contains('main')) && await h.$eval('#startEasy', e => !e.classList.contains('main')), '開始畫面記得上次選的「困難」');
+    await h.click('#startEasy');
+    ok((await h.$$('.cell:not(.empty)')).length === 4 && (await h.$eval('#score', e => e.textContent)).startsWith('0 / 10'), '再選「簡單」：新的一局，4 個地點，分數歸零');
+    // 結算畫面的主選單鈕（不用警語）
+    await h.evaluate(() => { st.n = 10; st.score = 7; showEnd(); });
+    ok((await h.$eval('#endHome', e => e.textContent)).includes('主選單'), '結算畫面有「主選單」鈕');
+    await h.click('#endHome');
+    ok(await h.$eval('#end', e => e.hidden) && await h.$eval('#home', e => !e.hidden), '結算後按「主選單」直接回開始畫面');
+    // 簡體＋台灣用字
+    await openSet(h); await opt(h, 'script', 'simp'); await opt(h, 'lang', 'zh'); await closeSet(h);
+    ok((await h.$eval('#hTitle', e => e.textContent)) === '方位转转转' && (await h.$eval('#startEasy', e => e.textContent)) === '简单 4 方位', '簡體：大標題與開始鈕');
+    ok((await h.$eval('#hSub', e => e.textContent)) === '' && await h.$('#startEasy small') === null, '只有中文：沒有西文副標與小字');
+    await h.click('#startEasy');
+    await h.click('#bHome');
+    const cts = await h.$eval('#cfm .mbox', e => e.textContent);
+    ok(cts.includes('回主选单') && cts.includes('继续玩') && cts.includes('进度会消失') && !/[選續]/.test(cts), '簡體警語用台灣用字：' + cts.replace(/\s+/g, ''));
+    await h.context().close();
+    // 減少動態效果
+    const rctx = await browser.newContext({ viewport: { width: 390, height: 760 }, reducedMotion: 'reduce' });
+    const rp = await rctx.newPage();
+    await rp.goto(url);
+    ok(await rp.$eval('.hme svg', e => getComputedStyle(e).animationName === 'none'), '手機設定「減少動態效果」：角色不轉');
+    await rctx.close();
+    // 預覽標籤與縮圖檔
+    const g = await fresh(null, { home: true });
+    const meta = await g.evaluate(() => Object.fromEntries([...document.querySelectorAll('meta[property^="og:"],meta[name="twitter:card"]')].map(m => [m.getAttribute('property') || m.getAttribute('name'), m.content])));
+    ok(meta['og:title'] === '方位轉轉轉 · ¡Gira y ubica!', 'og:title：' + meta['og:title']);
+    ok(meta['og:type'] === 'website' && meta['og:site_name'] === '每天一分鐘 · Cada día unos minutos', 'og:type、og:site_name');
+    ok(meta['og:description'].includes('轉一圈，找找看！') && meta['og:description'].includes(' · '), 'og:description：' + meta['og:description']);
+    ok(meta['og:url'] === 'https://wangchiapin.github.io/dondeestayquehay/', 'og:url');
+    ok(meta['og:image'].startsWith('https://wangchiapin.github.io/dondeestayquehay/og.jpg') && meta['og:image:width'] === '1200' && meta['og:image:height'] === '630', 'og:image 絕對網址與 1200×630');
+    ok(meta['twitter:card'] === 'summary_large_image', 'twitter:card');
+    ok(await g.$eval('link[rel="icon"]', e => e.getAttribute('href')) === 'icon.png' && await g.$eval('link[rel="apple-touch-icon"]', e => e.getAttribute('href')) === 'icon.png', '桌面小圖示連結');
+    await g.context().close();
+  }
+
   // ===== 1. 初始畫面、預設值、設定視窗 =====
   console.log('== 初始與設定視窗 ==');
   let page = await fresh();
@@ -153,7 +244,7 @@ async function fullGame(page, mode) {
   ok(await isOn(page, 'script', 'simp') && !await isOn(page, 'script', 'trad'), '「简体」亮起');
   ok(await page.$eval('#setbox h2', e => e.textContent.includes('设定') && !e.textContent.includes('设置')), '設定標題為台灣用字的簡體「设定」');
   await closeSet(page);
-  ok((await page.$eval('#title', e => e.textContent)) === '转一转・方位词', '標題變簡體');
+  ok((await page.$eval('#title', e => e.textContent)) === '方位转转转', '標題變簡體');
   const simpNames = await cellNames(page);
   ok(!simpNames.some(n => /[廳圖館銀郵醫學藥園運]/.test(n)), '地點名稱為簡體：' + simpNames.join(','));
   const qSimp = await page.$eval('.q', e => e.textContent);
@@ -166,7 +257,7 @@ async function fullGame(page, mode) {
   s = await stored(page);
   ok(s.script === 'trad' && await isOn(page, 'script', 'trad'), '切回繁體，存檔 script=trad');
   await closeSet(page);
-  ok((await page.$eval('#title', e => e.textContent)) === '轉一轉・方位詞', '標題回繁體');
+  ok((await page.$eval('#title', e => e.textContent)) === '方位轉轉轉', '標題回繁體');
   await page.context().close();
 
   // ===== 3. 語言（西／英／只有中文） =====
@@ -362,7 +453,8 @@ async function fullGame(page, mode) {
   ok(s.script === 'simp' && s.lang === 'en' && s.phon === 'zhuyin', '共用設定存好：' + JSON.stringify(s));
   ok(s.rate === 'fast' && s.other === 'keep', '改設定時沒有蓋掉語速和其他欄位');
   await page.reload();
-  ok((await page.$eval('#title', e => e.textContent)) === '转一转・方位词', '重新整理後仍是簡體');
+  await begin(page);
+  ok((await page.$eval('#title', e => e.textContent)) === '方位转转转', '重新整理後仍是簡體');
   ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))).includes('Mini dictionary'), '重新整理後仍是英文');
   ok((await page.$$('.cell:not(.empty)')).length === 8, '重新整理後仍是困難');
   ok((await page.$$('.cell:not(.empty) .n')).length === 0, '重新整理後仍是隱藏名稱');
@@ -377,7 +469,7 @@ async function fullGame(page, mode) {
     localStorage.setItem(k, JSON.stringify(cur));
     window.dispatchEvent(new StorageEvent('storage', { key: k }));
   }, KEY);
-  ok((await page.$eval('#title', e => e.textContent)) === '轉一轉・方位詞', '別的分頁改字形 → 這裡跟著變繁體');
+  ok((await page.$eval('#title', e => e.textContent)) === '方位轉轉轉', '別的分頁改字形 → 這裡跟著變繁體');
   ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))) === '小字典', '別的分頁改成只有中文 → 說明文字變只有中文');
   await page.context().close();
   // 存檔壞掉、值不合法 → 用預設
@@ -454,6 +546,7 @@ async function fullGame(page, mode) {
     page = await ctx.newPage();
     page.on('pageerror', e => errors.push(e.message));
     await page.goto(url);
+    await begin(page);
     const r = await page.evaluate(() => {
       const b = s => document.querySelector(s).getBoundingClientRect();
       return { title: b('#title'), score: b('#score'), dict: b('#bDict'), gear: b('#gear'), board: b('#board'),
@@ -527,6 +620,7 @@ async function fullGame(page, mode) {
   await page.waitForTimeout(10800);
   ok(await page.$('#fb') === null && await page.$('.opt:not([disabled])') !== null, '倒數關閉：超過 10 秒也不會時間到');
   await page.reload();
+  await begin(page);
   await openSet(page);
   ok(await isOn(page, 'timer', '0'), '重新整理後倒數仍是關');
   await opt(page, 'timer', '1');
@@ -551,6 +645,7 @@ async function fullGame(page, mode) {
   await page.waitForSelector('.opt');
   ok(await page.$eval('#spin', e => e.disabled), '未答題前鈕被鎖');
   await page.reload();
+  await begin(page);
   await fullGame(page, 'easy', false);
   console.log('== 困難：完整 10 題 ==');
   await openSet(page);
