@@ -3,7 +3,14 @@
 // 執行：node tests/test.js（需要 playwright）
 const { chromium } = require('playwright');
 const path = require('path');
-const url = 'file://' + path.resolve(__dirname, '..', 'index.html');
+// 用本機小伺服器開頁面（file:// 開檔時，Chromium 重新整理偶爾會把 localStorage 弄丟，測試會誤判）
+const http = require('http');
+const fs = require('fs');
+const srv = http.createServer((q, r) => {
+  r.setHeader('content-type', 'text/html;charset=utf-8');
+  r.end(fs.readFileSync(path.resolve(__dirname, '..', 'index.html')));
+});
+let url;
 const KEY = 'hanziGames.settings';
 
 let fails = 0;
@@ -103,6 +110,8 @@ async function fullGame(page, mode) {
 }
 
 (async () => {
+  await new Promise(r => srv.listen(0, '127.0.0.1', r));
+  url = 'http://127.0.0.1:' + srv.address().port + '/';
   browser = await chromium.launch();
 
   // ===== 1. 初始畫面、預設值、設定視窗 =====
@@ -165,20 +174,20 @@ async function fullGame(page, mode) {
   page = await fresh();
   await spinToQuestion(page);
   await openSet(page);
-  ok(await page.$eval('#sub', e => e.textContent.includes('Gira y ubica')), '西文：副標題 Gira y ubica');
+  ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))).includes('Mini diccionario'), '西文：小字典圖示的說明文字是西文');
   ok((await page.$eval('.qe', e => e.textContent)).startsWith('¿'), '西文：題目下有西文翻譯 ' + await page.$eval('.qe', e => e.textContent));
   ok(await page.$eval('#spin small', e => e.textContent === 'Girar'), '西文：旋轉鈕小字 Girar');
   await opt(page, 'lang', 'en');
   s = await stored(page);
   ok(s.lang === 'en' && await isOn(page, 'lang', 'en'), '切到英文，存檔 lang=en');
-  ok(await page.$eval('#sub', e => e.textContent.includes('Spin and Locate')), '英文：副標題');
+  ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))).includes('Mini dictionary'), '英文：小字典圖示的說明文字是英文');
   ok(/^(Where is|What is)/.test(await page.$eval('.qe', e => e.textContent)), '英文：題目翻譯 ' + await page.$eval('.qe', e => e.textContent));
   ok(await page.$eval('#spin small', e => e.textContent === 'Spin'), '英文：旋轉鈕小字 Spin');
   ok(await page.$eval('html', e => e.lang) === 'en', '英文：html lang=en');
   await opt(page, 'lang', 'zh');
   s = await stored(page);
   ok(s.lang === 'zh' && await isOn(page, 'lang', 'zh'), '切到只有中文，存檔 lang=zh');
-  ok(await page.$eval('#sub', e => e.textContent === ''), '純中文：沒有副標題');
+  ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))) === '小字典', '純中文：小字典圖示只有中文說明');
   ok(await page.$('.qe') === null, '純中文：題目下沒有外語');
   ok(await page.$('#spin small') === null, '純中文：旋轉鈕沒有小字');
   ok(await page.$('#setbox h2 small') === null, '純中文：設定標題沒有小字');
@@ -354,7 +363,7 @@ async function fullGame(page, mode) {
   ok(s.rate === 'fast' && s.other === 'keep', '改設定時沒有蓋掉語速和其他欄位');
   await page.reload();
   ok((await page.$eval('#title', e => e.textContent)) === '转一转・方位词', '重新整理後仍是簡體');
-  ok(await page.$eval('#sub', e => e.textContent.includes('Spin and Locate')), '重新整理後仍是英文');
+  ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))).includes('Mini dictionary'), '重新整理後仍是英文');
   ok((await page.$$('.cell:not(.empty)')).length === 8, '重新整理後仍是困難');
   ok((await page.$$('.cell:not(.empty) .n')).length === 0, '重新整理後仍是隱藏名稱');
   ok((await page.$$('.cell:not(.empty) .h')).length === 8, '重新整理後仍開著提示');
@@ -369,7 +378,7 @@ async function fullGame(page, mode) {
     window.dispatchEvent(new StorageEvent('storage', { key: k }));
   }, KEY);
   ok((await page.$eval('#title', e => e.textContent)) === '轉一轉・方位詞', '別的分頁改字形 → 這裡跟著變繁體');
-  ok(await page.$eval('#sub', e => e.textContent === ''), '別的分頁改成只有中文 → 副標題消失');
+  ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))) === '小字典', '別的分頁改成只有中文 → 說明文字變只有中文');
   await page.context().close();
   // 存檔壞掉、值不合法 → 用預設
   page = await fresh(() => localStorage.setItem('hanziGames.settings', JSON.stringify({ v: 1, script: 'xx', lang: 'fr', phon: 5, rate: 'zzz' })));
@@ -437,6 +446,46 @@ async function fullGame(page, mode) {
   const fbzy = await page.$eval('#fb .qp', e => e.textContent);
   ok(fbzy.includes('˙ㄉㄜ') && !/ㄜ˙/.test(fbzy), '回饋句的「的」注音為 ˙ㄉㄜ：' + fbzy);
   await page.context().close();
+
+  // ===== 版面：頂端一列、棋盤縮小、按鈕放進題目卡，題目與選項不用往下滑 =====
+  console.log('== 版面（手機一個畫面） ==');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 700 } });
+    page = await ctx.newPage();
+    page.on('pageerror', e => errors.push(e.message));
+    await page.goto(url);
+    const r = await page.evaluate(() => {
+      const b = s => document.querySelector(s).getBoundingClientRect();
+      return { title: b('#title'), score: b('#score'), dict: b('#bDict'), gear: b('#gear'), board: b('#board'),
+        sw: document.documentElement.scrollWidth, iw: window.innerWidth, spinInBox: !!document.querySelector('#qbox #spin'),
+        sub: document.querySelector('#sub'), bar: document.querySelector('.bar') };
+    });
+    ok(r.sub === null && r.bar === null, '舊的副標題列、小字典獨立一列已移除');
+    ok(Math.abs(r.title.top - r.dict.top) < 30 && Math.abs(r.gear.top - r.dict.top) < 2, '標題、📖、⚙️ 在同一列');
+    ok(r.dict.width < 50 && r.gear.width < 50 && r.dict.right < r.gear.left, '📖 在 ⚙️ 左邊，兩個都是小圖示');
+    ok(r.score.top >= r.title.bottom - 2 && r.score.bottom < r.board.top, '分數在標題下方，棋盤之前');
+    ok(r.board.width / r.iw > 0.68 && r.board.width / r.iw < 0.76, '棋盤縮到約 7 成寬（' + Math.round(r.board.width) + 'px）');
+    ok(Math.abs(r.board.left + r.board.width / 2 - r.iw / 2) < 2, '棋盤置中');
+    ok(r.spinInBox, '旋轉鈕在題目卡裡面');
+    ok(r.sw <= r.iw, '沒有橫向捲動');
+    ok(r.board.top < 90, '棋盤從畫面上方約 90px 內開始（' + Math.round(r.board.top) + 'px）');
+    await page.click('#spin');
+    await page.waitForSelector('.opt:not([disabled])', { timeout: 6000 });
+    const q = await page.evaluate(() => {
+      const b = s => document.querySelector(s).getBoundingClientRect();
+      return { opts: [...document.querySelectorAll('.opt')].map(e => e.getBoundingClientRect().bottom), spin: b('#spin'), vh: window.innerHeight,
+        lastOptInsideBox: b('#qbox').bottom >= Math.max(...[...document.querySelectorAll('.opt')].map(e => e.getBoundingClientRect().bottom)) };
+    });
+    ok(Math.max(...q.opts) <= q.vh, '出題後 4 個選項都在 700px 高的畫面內（最底 ' + Math.round(Math.max(...q.opts)) + 'px）');
+    ok(q.spin.bottom <= q.vh + 60, '按鈕也離畫面很近（' + Math.round(q.spin.bottom) + 'px）');
+    ok(q.lastOptInsideBox, '選項都在題目卡裡面');
+    // 答完後回饋文字放在按鈕下面，「下一題」鈕位置不變、仍在畫面內
+    await page.click('.opt[data-correct="1"]');
+    const after = await page.evaluate(() => ({ b: document.querySelector('#spin').getBoundingClientRect().bottom, vh: window.innerHeight, dis: document.querySelector('#spin').disabled }));
+    ok(!after.dis && after.b <= after.vh, '答完後「下一題」鈕仍在畫面內（' + Math.round(after.b) + ' / ' + after.vh + 'px）');
+    ok(await page.$eval('#fb', e => e.getBoundingClientRect().top > document.querySelector('#spin').getBoundingClientRect().bottom - 1), '回饋句在按鈕下面，不會被按鈕蓋住');
+    await ctx.close();
+  }
 
   // ===== 倒數計時（答完一律手動按「下一題」） =====
   console.log('== 倒數計時（答完一律手動按「下一題」） ==');

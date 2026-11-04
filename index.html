@@ -8,41 +8,40 @@
 :root{--bg:#f7f5f0;--ink:#3b3a36;--sub:#8b877c;--line:#d8d4ca;--card:#fffdf8;--accent:#8a6f4d;--ok:#5f8a63;--bad:#b0605a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
-#app{position:relative;max-width:480px;margin:0 auto;padding:12px 14px calc(24px + env(safe-area-inset-bottom))}
-h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spacing:2px;padding:0 46px}
-.sub{text-align:center;color:var(--sub);font-size:12px;margin-bottom:8px;min-height:0}
-.sub:empty{display:none}
-.gear{position:absolute;top:10px;right:14px;width:40px;height:40px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:19px;display:flex;align-items:center;justify-content:center}
-.bar{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0}
-.bar button{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px}
-.bar button small{display:inline;font-size:11px;color:var(--sub);margin-left:4px}
-.score{text-align:center;font-size:14px;color:var(--sub);margin:4px 0 8px}
-#board{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:6px;aspect-ratio:1/1;width:100%}
+#app{position:relative;max-width:480px;margin:0 auto;padding:8px 14px calc(16px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px}
+.ttl{min-width:0}
+h1{font-size:18px;margin:0;font-weight:600;letter-spacing:1px;white-space:nowrap}
+.score{font-size:13px;color:var(--sub);margin-top:1px}
+.icons{display:flex;gap:6px;flex:none}
+.gear{width:38px;height:38px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:18px;display:flex;align-items:center;justify-content:center}
+#board{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:5px;aspect-ratio:1/1;width:76%;margin:0 auto}
 .cell{background:var(--card);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2px;position:relative;min-width:0}
 .cell.empty{background:transparent;border:1px dashed var(--line)}
 .cell .img{flex:1;min-height:0;width:78%;display:flex;align-items:center;justify-content:center;margin-top:12px}
 .cell .img svg{width:100%;height:100%}
 .cell.notext .img{margin-top:8px;margin-bottom:4px;width:84%}
-.cell .n{font-size:14px;font-weight:600;margin-top:2px}
-.cell .p{font-size:10px;color:var(--sub);line-height:1.2}
+.cell .n{font-size:13px;font-weight:600;margin-top:2px}
+.cell .p{font-size:9px;color:var(--sub);line-height:1.2}
 .cell .h{position:absolute;top:3px;left:0;right:0;font-size:10px;color:var(--accent)}
 .cell.target{outline:3px solid var(--accent)}
 .center{background:transparent;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;border-radius:10px;grid-row:2;grid-column:2}
 #char{width:78%;aspect-ratio:1/1;transition:transform 2s cubic-bezier(.2,.7,.2,1)}
 #char.noanim{transition:none}
-#spin{display:block;margin:14px auto 8px;font:inherit;font-size:17px;padding:10px 28px;border:none;border-radius:10px;background:var(--accent);color:#fff;text-align:center}
+#spin{display:block;margin:10px auto 0;font:inherit;font-size:16px;padding:8px 28px;border:none;border-radius:10px;background:var(--accent);color:#fff;text-align:center}
 #spin small{display:block;font-size:11px;opacity:.85;font-weight:400}
 #spin:disabled{opacity:.4}
-#tbar{height:6px;border-radius:3px;background:var(--line);margin:0 0 8px;overflow:hidden;visibility:hidden}
+#tbar{height:6px;border-radius:3px;background:var(--line);margin:8px 0;overflow:hidden;visibility:hidden}
 #tbar.on{visibility:visible}
 #tbar i{display:block;height:100%;width:100%;background:var(--accent)}
 #tbar.low i{background:var(--bad)}
-#qbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:130px;text-align:center}
+#qbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:center}
+#qc{min-height:96px}
 .q{font-size:20px;font-weight:600}
 .qp{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.3}
 .qe{font-size:12px;color:var(--sub);margin-top:2px;font-style:italic}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.opt{font:inherit;font-size:15px;padding:10px 6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.opt{font:inherit;font-size:15px;padding:8px 6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px}
 .opt .op{display:block;font-size:10px;color:var(--sub);line-height:1.25}
 .opt.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
 .opt.ok .op{color:#e8f0e8}
@@ -83,11 +82,10 @@ h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spac
 </head>
 <body>
 <div id="app">
-  <button type="button" class="gear" id="gear">⚙️</button>
-  <h1 id="title"></h1>
-  <div class="sub" id="sub"></div>
-  <div class="bar"><button type="button" id="bDict"></button></div>
-  <div class="score" id="score"></div>
+  <div class="top">
+    <div class="ttl"><h1 id="title"></h1><div class="score" id="score"></div></div>
+    <div class="icons"><button type="button" class="gear" id="bDict">📖</button><button type="button" class="gear" id="gear">⚙️</button></div>
+  </div>
   <div id="board">
     <div class="cell" id="cell-7" data-s="7" style="grid-row:1;grid-column:1"></div>
     <div class="cell" id="cell-0" data-s="0" style="grid-row:1;grid-column:2"></div>
@@ -107,9 +105,8 @@ h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spac
     <div class="cell" id="cell-4" data-s="4" style="grid-row:3;grid-column:2"></div>
     <div class="cell" id="cell-3" data-s="3" style="grid-row:3;grid-column:3"></div>
   </div>
-  <button type="button" id="spin"></button>
   <div id="tbar"><i></i></div>
-  <section id="qbox"></section>
+  <section id="qbox"><div id="qc"></div><button type="button" id="spin"></button><div id="qf"></div></section>
 </div>
 
 <div class="modal" id="dict" hidden>
@@ -372,9 +369,8 @@ function fullSentence(q){
 function update(){
   document.documentElement.lang=SETTINGS.lang==='en'?'en':(SETTINGS.lang==='es'?'es':(simp()?'zh-CN':'zh-TW'));
   $('#title').textContent=tr('title');
-  $('#sub').textContent=fo('title');
   $('#gear').setAttribute('aria-label',lab('settings'));
-  $('#bDict').innerHTML='📖 '+L('dict');
+  $('#bDict').setAttribute('aria-label',lab('dict'));$('#bDict').title=lab('dict');
   $('#score').textContent=st.n+' / '+ROUNDS+' '+tr('qn')+'　✓ '+st.score;
   // 格子
   for(let s=0;s<8;s++){
@@ -393,10 +389,10 @@ function update(){
   sp.innerHTML=(st.q&&st.answered)?(st.n>=ROUNDS?L('result'):L('next')):L('start');
   sp.disabled=st.spinning||!!(st.q&&!st.answered);
   // 題目區
-  const qb=$('#qbox');
+  const qb=$('#qc'),qbx=$('#qbox');
   const f1=k=>fo(k)?'<div class="qe">'+fo(k)+'</div>':'';
-  if(st.spinning){qb.innerHTML='<div class="q">'+tr('turning')+'</div>'+f1('turning');return}
-  if(!st.q){qb.innerHTML='<div class="q" style="font-size:16px">'+tr('intro')+'</div>'+f1('intro');return}
+  if(st.spinning){$('#qf').innerHTML='';qb.innerHTML='<div class="q">'+tr('turning')+'</div>'+f1('turning');return}
+  if(!st.q){$('#qf').innerHTML='';qb.innerHTML='<div class="q" style="font-size:16px">'+tr('intro')+'</div>'+f1('intro');return}
   const q=st.q,es=FL()==='es',hasF=SETTINGS.lang!=='zh';let qt,qo,qe='';
   if(q.type==='zai'){
     qt=pn(q.place)+'在'+tr('where')+'？';qo=J(q.place,W.zai,W.nali);
@@ -413,12 +409,13 @@ function update(){
     h+='<button type="button" class="'+cls+'" data-i="'+i+'" data-correct="'+(o.ok?1:0)+'"'+(st.answered?' disabled':'')+'>'+l.t+(lp?'<span class="op">'+lp+'</span>':'')+'</button>';
   });
   h+='</div>';
+  let fbh='';
   if(st.answered){
     const good=q.picked>=0&&q.options[q.picked].ok,fs=fullSentence(q),fph=phHtml(fs);
-    h+='<div class="fb '+(good?'ok':'bad')+'" id="fb">'+tr(good?'ok':q.picked<0?'timeout':'bad')+'<br>'+fs.t+(fph?'<div class="qp">'+fph+'</div>':'')+(hasF?'<div class="qe">'+fs.f+'</div>':'')+'</div>';
+    fbh='<div class="fb '+(good?'ok':'bad')+'" id="fb">'+tr(good?'ok':q.picked<0?'timeout':'bad')+'<br>'+fs.t+(fph?'<div class="qp">'+fph+'</div>':'')+(hasF?'<div class="qe">'+fs.f+'</div>':'')+'</div>';
   }
-  qb.innerHTML=h;
-  qb.dataset.v=q.v;qb.dataset.type=q.type;qb.dataset.cell=q.cell;qb.dataset.rel=q.rel;
+  qb.innerHTML=h;$('#qf').innerHTML=fbh;
+  qbx.dataset.v=q.v;qbx.dataset.type=q.type;qbx.dataset.cell=q.cell;qbx.dataset.rel=q.rel;
 }
 
 /* ============ 小字典 ============ */
