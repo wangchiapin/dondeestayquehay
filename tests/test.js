@@ -9,7 +9,9 @@ const KEY = 'hanziGames.settings';
 let fails = 0;
 const ok = (c, msg) => { if (!c) { fails++; console.log('✗ ' + msg); } else console.log('✓ ' + msg); };
 
-const DIRS_T = ['前面','右前面','右邊','右後面','後面','左後面','左邊','左前面'];
+const DIRS_T = ['前面','右前方','右邊','右後方','後面','左後方','左邊','左前方'];      // 標準說法（提示標籤、字典用）
+const DIRS_ALT = ['正前方','右前方','右手邊','右後方','正後方','左後方','左手邊','左前方']; // 另一種常見說法
+const seenV = new Set();
 const TONE = /[āáǎàēéěèīíǐìōóǒòūúǔùü]/;   // 拼音聲調字母
 const ZY = /[ㄅ-ㄩ]/;                          // 注音符號
 
@@ -29,7 +31,12 @@ async function openSet(page) { await page.click('#gear'); await page.waitForSele
 async function closeSet(page) { await page.click('#setDone'); await page.waitForSelector('#setov', { state: 'hidden' }); }
 async function opt(page, k, v) { await page.click(`.sopt[data-k="${k}"][data-v="${v}"]`); }
 const isOn = (page, k, v) => page.$eval(`.sopt[data-k="${k}"][data-v="${v}"]`, e => e.classList.contains('on'));
-async function spinToQuestion(page) { await page.click('#spin'); await page.waitForSelector('.opt', { timeout: 6000 }); }
+// 一律按「旋轉／下一題」鈕才會出下一題
+async function spinToQuestion(page) {
+  await page.click('#spin');
+  await page.waitForSelector('.opt:not([disabled])', { timeout: 9000 });
+}
+const tbarOn = page => page.$eval('#tbar', e => e.classList.contains('on'));
 const cellNames = page => page.$$eval('.cell:not(.empty)', els => els.map(e => e.dataset.name));
 
 async function playRound(page, mode, wantCorrect) {
@@ -38,7 +45,7 @@ async function playRound(page, mode, wantCorrect) {
     const qb = document.querySelector('#qbox');
     const ch = document.querySelector('#char');
     const m = /rotate\((-?[\d.]+)deg\)/.exec(ch.style.transform);
-    return { type: qb.dataset.type, cell: +qb.dataset.cell, rel: +qb.dataset.rel,
+    return { type: qb.dataset.type, cell: +qb.dataset.cell, rel: +qb.dataset.rel, v: +qb.dataset.v, q: document.querySelector('.q').textContent,
       facing: +ch.dataset.facing, angle: m ? +m[1] : null,
       texts: [...document.querySelectorAll('.opt')].map(b => b.firstChild.textContent),
       correct: [...document.querySelectorAll('.opt')].map(b => b.dataset.correct) };
@@ -49,7 +56,13 @@ async function playRound(page, mode, wantCorrect) {
   const ci = info.correct.indexOf('1');
   ok(info.correct.filter(c => c === '1').length === 1, '只有一個正確選項');
   ok(info.texts.length === 4, '4 個選項');
-  if (info.type === 'zai') ok(info.texts[ci] === '在我的' + DIRS_T[info.rel], '「在」題正確答案文字：' + info.texts[ci]);
+  seenV.add(info.v);
+  const names = info.v ? DIRS_ALT : DIRS_T;
+  ok(await tbarOn(page), '出題後倒數條開始跑');
+  if (info.type === 'zai') {
+    ok(info.texts[ci] === '在我的' + names[info.rel], '「在」題正確答案文字：' + info.texts[ci]);
+    ok(info.texts.every(t => names.map(n => '在我的' + n).includes(t)), '4 個選項用同一種說法（' + (info.v ? '正前方類' : '前面類') + '）');
+  } else ok(info.q === '我的' + names[info.rel] + '有什麼？', '「有」題題目用同一種說法：' + info.q);
   const placeName = await page.$eval('#cell-' + info.cell, e => e.dataset.name);
   if (info.type === 'you') ok(info.texts[ci] === '有' + placeName, '「有」題正確答案文字：' + info.texts[ci]);
   let pickIdx = ci;
@@ -60,7 +73,9 @@ async function playRound(page, mode, wantCorrect) {
   ok(await page.$('.opt.ok') !== null, '答後顯示正確答案');
   ok(await page.$('#cell-' + info.cell + '.target') !== null, '答後標出目標格');
   ok(await page.$('#fb') !== null, '有回饋文字');
-  ok(await page.$eval('#spin', e => !e.disabled), '答後旋轉鈕可按');
+  ok((await page.$eval('#fb', e => e.textContent)).includes(names[info.rel]), '回饋句用同一種說法');
+  ok(!(await tbarOn(page)), '答完倒數條停止');
+  ok(await page.$eval('#spin', e => !e.disabled), '答後按鈕可按（可跳過等待）');
 }
 
 async function fullGame(page, mode) {
@@ -69,10 +84,17 @@ async function fullGame(page, mode) {
     const want = i % 3 !== 2;
     if (want) correct++;
     await playRound(page, mode, want);
+    if (i === 8) ok(await page.$eval('#spin', e => e.textContent.includes('下一題')), '答完中途題：按鈕寫「下一題」');
+    if (i === 4) {
+      await page.waitForTimeout(3500);
+      ok((await page.$eval('#score', e => e.textContent)).startsWith('5 / 10') && await page.$('.opt[disabled]') !== null, '答完等 3.5 秒：不會自己轉下一題');
+    }
   }
+  await page.waitForTimeout(3500);
+  ok(await page.$eval('#end', e => e.hidden), '第 10 題答完：等 3.5 秒也不會自己跳結算');
   ok(await page.$eval('#spin', e => e.textContent.includes('結果')), '第 10 題後按鈕變「看結果」');
   await page.click('#spin');
-  ok(await page.$eval('#end', e => !e.hidden), '結算視窗出現');
+  ok(await page.$eval('#end', e => !e.hidden), '按「看結果」跳出結算視窗');
   const txt = await page.$eval('#endText', e => e.textContent);
   ok(txt.includes(correct + ' / 10'), `結算分數 ${correct} / 10：${txt}`);
   await page.click('#again');
@@ -93,11 +115,11 @@ async function fullGame(page, mode) {
   let s = await stored(page);
   ok(s && s.v === 1 && s.script === 'trad' && s.lang === 'es' && s.phon === 'pinyin' && s.rate === 'normal', '第一次開啟寫入預設共用設定：' + JSON.stringify(s));
   await openSet(page);
-  ok(await page.$$eval('#setbox .sopt', e => e.length) === 15, '設定視窗共 15 個選項');
+  ok(await page.$$eval('#setbox .sopt', e => e.length) === 17, '設定視窗共 17 個選項');
   const keys = await page.$$eval('#setbox .sopt', els => [...new Set(els.map(e => e.dataset.k))]);
-  ok(keys.join(',') === 'script,lang,phon,mode,text,hint', '六組設定：' + keys.join(','));
+  ok(keys.join(',') === 'script,lang,phon,mode,text,timer,hint', '七組設定：' + keys.join(','));
   ok(await isOn(page, 'script', 'trad') && await isOn(page, 'lang', 'es') && await isOn(page, 'phon', 'pinyin')
-     && await isOn(page, 'mode', 'easy') && await isOn(page, 'text', '1') && await isOn(page, 'hint', '0'), '預設選中：繁體／西／拼音／簡單／顯示名稱／提示關');
+     && await isOn(page, 'mode', 'easy') && await isOn(page, 'text', '1') && await isOn(page, 'timer', '1') && await isOn(page, 'hint', '0'), '預設選中：繁體／西／拼音／簡單／顯示名稱／倒數開／提示關');
   ok(await page.$eval('#setbox h2', e => e.textContent.includes('設定')), '視窗標題為「設定」');
   // 視窗開著時，後面的按鈕點不到
   let blocked = false;
@@ -369,6 +391,8 @@ async function fullGame(page, mode) {
   ok(new Set(dIcons).size === 12, '12 張地點圖片各不相同');
   await page.click('#tDirs');
   ok((await page.$$('#dbody .row')).length === 8, '方位分頁 8 筆');
+  const dirTxt = await page.$eval('#dbody', e => e.textContent);
+  ok(['前面','正前方','右邊','右手邊','後面','正後方','左邊','左手邊','右前方','右後方','左後方','左前方'].every(w => dirTxt.includes(w)), '方位分頁同時列出常見說法：正前方、正後方、左手邊、右手邊');
   await page.click('#tGram');
   ok((await page.$$('#dbody .gr')).length === 3, '句型分頁 3 則');
   await page.click('#dClose');
@@ -391,25 +415,82 @@ async function fullGame(page, mode) {
     school:['xuéxiào','ㄒㄩㄝˊ ㄒㄧㄠˋ'], night:['yèshì','ㄧㄝˋ ㄕˋ'], mrt:['jiéyùnzhàn','ㄐㄧㄝˊ ㄩㄣˋ ㄓㄢˋ'],
     pharm:['yàojú','ㄧㄠˋ ㄐㄩˊ'], park:['gōngyuán','ㄍㄨㄥ ㄩㄢˊ'], mart:['chāoshì','ㄔㄠ ㄕˋ'] };
   const FROZEN_DIRS = [
-    ['qiánmiàn','ㄑㄧㄢˊ ㄇㄧㄢˋ'], ['yòu qiánmiàn','ㄧㄡˋ ㄑㄧㄢˊ ㄇㄧㄢˋ'], ['yòubiān','ㄧㄡˋ ㄅㄧㄢ'],
-    ['yòu hòumiàn','ㄧㄡˋ ㄏㄡˋ ㄇㄧㄢˋ'], ['hòumiàn','ㄏㄡˋ ㄇㄧㄢˋ'], ['zuǒ hòumiàn','ㄗㄨㄛˇ ㄏㄡˋ ㄇㄧㄢˋ'],
-    ['zuǒbiān','ㄗㄨㄛˇ ㄅㄧㄢ'], ['zuǒ qiánmiàn','ㄗㄨㄛˇ ㄑㄧㄢˊ ㄇㄧㄢˋ'] ];
+    ['qiánmiàn','ㄑㄧㄢˊ ㄇㄧㄢˋ'], ['yòu qiánfāng','ㄧㄡˋ ㄑㄧㄢˊ ㄈㄤ'], ['yòubiān','ㄧㄡˋ ㄅㄧㄢ'],
+    ['yòu hòufāng','ㄧㄡˋ ㄏㄡˋ ㄈㄤ'], ['hòumiàn','ㄏㄡˋ ㄇㄧㄢˋ'], ['zuǒ hòufāng','ㄗㄨㄛˇ ㄏㄡˋ ㄈㄤ'],
+    ['zuǒbiān','ㄗㄨㄛˇ ㄅㄧㄢ'], ['zuǒ qiánfāng','ㄗㄨㄛˇ ㄑㄧㄢˊ ㄈㄤ'] ];
+  const FROZEN_ALT = { 0:['zhèng qiánfāng','ㄓㄥˋ ㄑㄧㄢˊ ㄈㄤ'], 2:['yòushǒubiān','ㄧㄡˋ ㄕㄡˇ ㄅㄧㄢ'], 4:['zhèng hòufāng','ㄓㄥˋ ㄏㄡˋ ㄈㄤ'], 6:['zuǒshǒubiān','ㄗㄨㄛˇ ㄕㄡˇ ㄅㄧㄢ'] };
   const FROZEN_W = { zai:['zài','ㄗㄞˋ'], wo:['wǒ','ㄨㄛˇ'], de:['de','˙ㄉㄜ'], you:['yǒu','ㄧㄡˇ'], nali:['nǎlǐ','ㄋㄚˇ ㄌㄧˇ'], shme:['shénme','ㄕㄣˊ ˙ㄇㄜ'] };
   const data = await page.evaluate(() => ({ P: PLACES, D: DIRS, W }));
   ok(data.P.every(p => JSON.stringify([p.py, p.zy]) === JSON.stringify(FROZEN_PLACES[p.id])), '12 個地點的拼音與注音和核對結果一致');
   ok(data.D.every((d, i) => d.py === FROZEN_DIRS[i][0] && d.zy === FROZEN_DIRS[i][1]), '8 個方位詞的拼音與注音和核對結果一致');
+  ok(data.D.every((d, i) => FROZEN_ALT[i] ? (d.alt && d.alt.py === FROZEN_ALT[i][0] && d.alt.zy === FROZEN_ALT[i][1]) : !d.alt), '正前方／右手邊／正後方／左手邊 的拼音與注音一致，斜角方位沒有第二種說法');
   ok(Object.keys(FROZEN_W).every(k => data.W[k].py === FROZEN_W[k][0] && data.W[k].zy === FROZEN_W[k][1]), '在／我／的／有／哪裡／什麼 的拼音與注音一致');
   const syl = /^˙?[ㄅ-ㄩ]+[ˊˇˋ]?$/;
-  const allZy = [...data.P.map(p => p.zy), ...data.D.map(d => d.zy), ...Object.values(data.W).map(w => w.zy)];
+  const allZy = [...data.P.map(p => p.zy), ...data.D.map(d => d.zy), ...data.D.filter(d => d.alt).map(d => d.alt.zy), ...Object.values(data.W).map(w => w.zy)];
   ok(allZy.every(z => z.split(' ').every(x => syl.test(x))), '每個注音音節格式正確（輕聲點在前面，例如 ˙ㄉㄜ）');
   ok(!allZy.some(z => /[ㄅ-ㄩ]˙/.test(z)), '沒有把輕聲點寫在音節後面');
-  ok(data.P.every(p => p.zy.split(' ').length === [...p.zh].length) && data.D.every(d => d.zy.split(' ').length === [...d.zh].length), '注音音節數＝漢字數');
+  ok(data.P.every(p => p.zy.split(' ').length === [...p.zh].length) && data.D.every(d => d.zy.split(' ').length === [...d.zh].length && (!d.alt || d.alt.zy.split(' ').length === [...d.alt.zh].length)), '注音音節數＝漢字數');
   // 畫面上：回饋句與題目的注音有輕聲點
   await openSet(page); await opt(page, 'phon', 'zhuyin'); await closeSet(page);
   await spinToQuestion(page);
   await page.click('.opt[data-i="0"]');
   const fbzy = await page.$eval('#fb .qp', e => e.textContent);
   ok(fbzy.includes('˙ㄉㄜ') && !/ㄜ˙/.test(fbzy), '回饋句的「的」注音為 ˙ㄉㄜ：' + fbzy);
+  await page.context().close();
+
+  // ===== 倒數計時（答完一律手動按「下一題」） =====
+  console.log('== 倒數計時（答完一律手動按「下一題」） ==');
+  page = await fresh();
+  ok(!(await tbarOn(page)), '還沒出題：倒數條不顯示');
+  await spinToQuestion(page);
+  ok(await tbarOn(page), '出題：倒數條開始');
+  await openSet(page);
+  ok(!(await tbarOn(page)), '開設定：倒數暫停');
+  await closeSet(page);
+  ok(await tbarOn(page), '關設定：倒數重新開始');
+  await page.click('#bDict');
+  ok(!(await tbarOn(page)), '開字典：倒數暫停');
+  await page.click('#dClose');
+  ok(await tbarOn(page), '關字典：倒數重新開始');
+  // 時間到：算答錯、顯示正確答案、自己轉下一題
+  await page.waitForSelector('#fb', { timeout: 12000 });
+  ok((await page.$eval('#fb', e => e.textContent)).includes('時間到'), '時間到：顯示「時間到！正確：」');
+  ok((await page.$eval('#score', e => e.textContent)).startsWith('1 / 10') && (await page.$eval('#score', e => e.textContent)).includes('✓ 0'), '時間到算一題、沒得分');
+  ok((await page.$$('.opt.ok')).length === 1 && (await page.$$('.opt.bad')).length === 0, '時間到：只標出正確答案');
+  ok(await page.$('.cell.target') !== null, '時間到：標出目標格');
+  ok(!(await tbarOn(page)), '時間到後倒數條停止');
+  await page.waitForTimeout(3500);
+  ok((await page.$eval('#score', e => e.textContent)).startsWith('1 / 10') && await page.$('.opt[disabled]') !== null && await page.$('#fb') !== null, '時間到後等 3.5 秒：停在原題，不會自己轉');
+  await page.click('#spin');
+  await page.waitForSelector('.opt:not([disabled])', { timeout: 6000 });
+  ok(await page.$('#fb') === null, '按「下一題」才出新題');
+  await page.context().close();
+
+  // 關閉倒數：存檔、重開還在、不會時間到
+  page = await fresh();
+  await openSet(page);
+  await opt(page, 'timer', '0');
+  ok(await isOn(page, 'timer', '0') && !await isOn(page, 'timer', '1'), '倒數「關」亮起');
+  ok((await storedGame(page)).timer === false, '存檔 timer=false');
+  await closeSet(page);
+  await spinToQuestion(page);
+  ok(!(await tbarOn(page)), '倒數關閉：出題後沒有倒數條');
+  await page.waitForTimeout(10800);
+  ok(await page.$('#fb') === null && await page.$('.opt:not([disabled])') !== null, '倒數關閉：超過 10 秒也不會時間到');
+  await page.reload();
+  await openSet(page);
+  ok(await isOn(page, 'timer', '0'), '重新整理後倒數仍是關');
+  await opt(page, 'timer', '1');
+  ok((await storedGame(page)).timer === true && await isOn(page, 'timer', '1'), '倒數再開：存檔 timer=true');
+  await closeSet(page);
+  await spinToQuestion(page);
+  ok(await tbarOn(page), '倒數再開：出題後倒數條回來');
+  await page.context().close();
+
+  // 常見說法：每個方位的第二種說法，各自可選用
+  page = await fresh();
+  const alts = await page.evaluate(() => [0, 1].map(v => DIRS.map(d => dv(d, v).zh)));
+  ok(JSON.stringify(alts[0]) === JSON.stringify(DIRS_T) && JSON.stringify(alts[1]) === JSON.stringify(DIRS_ALT), '兩種說法清單正確');
   await page.context().close();
 
   // ===== 10. 完整玩一輪（簡單、困難） =====
@@ -421,12 +502,13 @@ async function fullGame(page, mode) {
   await page.waitForSelector('.opt');
   ok(await page.$eval('#spin', e => e.disabled), '未答題前鈕被鎖');
   await page.reload();
-  await fullGame(page, 'easy');
+  await fullGame(page, 'easy', false);
   console.log('== 困難：完整 10 題 ==');
   await openSet(page);
   await opt(page, 'mode', 'hard');
   await closeSet(page);
   await fullGame(page, 'hard');
+  ok(seenV.has(0) && seenV.has(1), '兩輪下來，兩種說法都出現過');
   await page.context().close();
 
   ok(errors.length === 0, '沒有 JS 錯誤' + (errors.length ? '：' + errors.join('; ') : ''));

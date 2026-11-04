@@ -33,6 +33,10 @@ h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spac
 #spin{display:block;margin:14px auto 8px;font:inherit;font-size:17px;padding:10px 28px;border:none;border-radius:10px;background:var(--accent);color:#fff;text-align:center}
 #spin small{display:block;font-size:11px;opacity:.85;font-weight:400}
 #spin:disabled{opacity:.4}
+#tbar{height:6px;border-radius:3px;background:var(--line);margin:0 0 8px;overflow:hidden;visibility:hidden}
+#tbar.on{visibility:visible}
+#tbar i{display:block;height:100%;width:100%;background:var(--accent)}
+#tbar.low i{background:var(--bad)}
 #qbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:130px;text-align:center}
 .q{font-size:20px;font-weight:600}
 .qp{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.3}
@@ -104,6 +108,7 @@ h1{font-size:20px;margin:6px 0 2px;text-align:center;font-weight:600;letter-spac
     <div class="cell" id="cell-3" data-s="3" style="grid-row:3;grid-column:3"></div>
   </div>
   <button type="button" id="spin"></button>
+  <div id="tbar"><i></i></div>
   <section id="qbox"></section>
 </div>
 
@@ -156,12 +161,13 @@ const simp = () => SETTINGS.script === 'simp';
 
 /* ============ 這個遊戲自己的設定：難度、地點名稱、方位提示 ============ */
 const GAME_KEY = 'fangwei';
-const G = { mode:'easy', text:true, hint:false };
+const G = { mode:'easy', text:true, hint:false, timer:true };
 try{
   const s = JSON.parse(localStorage.getItem(GAME_KEY) || '{}') || {};
   if (s.mode === 'easy' || s.mode === 'hard') G.mode = s.mode;
   if (s.text === false) G.text = false;
   G.hint = !!s.hint;
+  if (s.timer === false) G.timer = false;
 }catch(e){}
 function saveG(){ try{ localStorage.setItem(GAME_KEY, JSON.stringify(G)); }catch(e){} }
 
@@ -170,7 +176,11 @@ const T = {
   title:['轉一轉・方位詞','转一转・方位词','Gira y ubica · Direcciones relativas','Spin and Locate · Relative Directions'],
   spin:['🔄 旋轉','🔄 旋转','Girar','Spin'],
   turning:['轉動中…','转动中…','Girando…','Spinning…'],
-  next:['再轉一次','再转一次','Girar otra vez','Spin again'],
+  next:['下一題','下一题','Siguiente','Next'],
+  start:['🔄 旋轉','🔄 旋转','Girar','Spin'],
+  timeout:['時間到！正確：','时间到！正确：','¡Se acabó el tiempo! Correcto:','Time\'s up! Correct:'],
+  timerLbl:['倒數計時','倒数计时','Cuenta regresiva','Countdown'],
+  timerNote:['每題 10 秒，時間到算答錯','每题 10 秒，时间到算答错','10 segundos por pregunta; si se acaba, cuenta como error','10 seconds per question; time out counts as wrong'],
   result:['看結果','看结果','Ver resultado','See result'],
   intro:['按「旋轉」，角色會轉向。要用角色自己的方向來想！','按「旋转」，角色会转向。要用角色自己的方向来想！','Pulsa «Girar»: el personaje cambia de dirección. ¡Piensa desde SU punto de vista!','Press “Spin”: the character turns. Think from THEIR point of view!'],
   ok:['答對了！','答对了！','¡Correcto!','Correct!'],
@@ -233,16 +243,18 @@ const PLACES=[
 ];
 // 相對角色的方位，依順時針：0 前 → 7 左前
 const DIRS=[
-  {zh:'前面',zs:'前面',py:'qiánmiàn',zy:'ㄑㄧㄢˊ ㄇㄧㄢˋ',es:'delante de mí',en:'ahead of me'},
-  {zh:'右前面',zs:'右前面',py:'yòu qiánmiàn',zy:'ㄧㄡˋ ㄑㄧㄢˊ ㄇㄧㄢˋ',es:'delante a la derecha',en:'ahead to my right'},
-  {zh:'右邊',zs:'右边',py:'yòubiān',zy:'ㄧㄡˋ ㄅㄧㄢ',es:'a la derecha',en:'to my right'},
-  {zh:'右後面',zs:'右后面',py:'yòu hòumiàn',zy:'ㄧㄡˋ ㄏㄡˋ ㄇㄧㄢˋ',es:'detrás a la derecha',en:'behind me to the right'},
-  {zh:'後面',zs:'后面',py:'hòumiàn',zy:'ㄏㄡˋ ㄇㄧㄢˋ',es:'detrás de mí',en:'behind me'},
-  {zh:'左後面',zs:'左后面',py:'zuǒ hòumiàn',zy:'ㄗㄨㄛˇ ㄏㄡˋ ㄇㄧㄢˋ',es:'detrás a la izquierda',en:'behind me to the left'},
-  {zh:'左邊',zs:'左边',py:'zuǒbiān',zy:'ㄗㄨㄛˇ ㄅㄧㄢ',es:'a la izquierda',en:'to my left'},
-  {zh:'左前面',zs:'左前面',py:'zuǒ qiánmiàn',zy:'ㄗㄨㄛˇ ㄑㄧㄢˊ ㄇㄧㄢˋ',es:'delante a la izquierda',en:'ahead to my left'}
+  {zh:'前面',zs:'前面',py:'qiánmiàn',zy:'ㄑㄧㄢˊ ㄇㄧㄢˋ',alt:{zh:'正前方',zs:'正前方',py:'zhèng qiánfāng',zy:'ㄓㄥˋ ㄑㄧㄢˊ ㄈㄤ'},es:'delante de mí',en:'ahead of me'},
+  {zh:'右前方',zs:'右前方',py:'yòu qiánfāng',zy:'ㄧㄡˋ ㄑㄧㄢˊ ㄈㄤ',es:'delante a la derecha',en:'ahead to my right'},
+  {zh:'右邊',zs:'右边',py:'yòubiān',zy:'ㄧㄡˋ ㄅㄧㄢ',alt:{zh:'右手邊',zs:'右手边',py:'yòushǒubiān',zy:'ㄧㄡˋ ㄕㄡˇ ㄅㄧㄢ'},es:'a la derecha',en:'to my right'},
+  {zh:'右後方',zs:'右后方',py:'yòu hòufāng',zy:'ㄧㄡˋ ㄏㄡˋ ㄈㄤ',es:'detrás a la derecha',en:'behind me to the right'},
+  {zh:'後面',zs:'后面',py:'hòumiàn',zy:'ㄏㄡˋ ㄇㄧㄢˋ',alt:{zh:'正後方',zs:'正后方',py:'zhèng hòufāng',zy:'ㄓㄥˋ ㄏㄡˋ ㄈㄤ'},es:'detrás de mí',en:'behind me'},
+  {zh:'左後方',zs:'左后方',py:'zuǒ hòufāng',zy:'ㄗㄨㄛˇ ㄏㄡˋ ㄈㄤ',es:'detrás a la izquierda',en:'behind me to the left'},
+  {zh:'左邊',zs:'左边',py:'zuǒbiān',zy:'ㄗㄨㄛˇ ㄅㄧㄢ',alt:{zh:'左手邊',zs:'左手边',py:'zuǒshǒubiān',zy:'ㄗㄨㄛˇ ㄕㄡˇ ㄅㄧㄢ'},es:'a la izquierda',en:'to my left'},
+  {zh:'左前方',zs:'左前方',py:'zuǒ qiánfāng',zy:'ㄗㄨㄛˇ ㄑㄧㄢˊ ㄈㄤ',es:'delante a la izquierda',en:'ahead to my left'}
 ];
 const W={ zai:{py:'zài',zy:'ㄗㄞˋ'}, wo:{py:'wǒ',zy:'ㄨㄛˇ'}, de:{py:'de',zy:'˙ㄉㄜ'}, you:{py:'yǒu',zy:'ㄧㄡˇ'}, nali:{py:'nǎlǐ',zy:'ㄋㄚˇ ㄌㄧˇ'}, shme:{py:'shénme',zy:'ㄕㄣˊ ˙ㄇㄜ'} };
+// 同一方位的常見說法：v=1 用 alt（正前方、左手邊…），沒有 alt 的方位維持原詞
+const dv=(d,v)=>v&&d.alt?Object.assign({},d,d.alt):d;
 const J=(...a)=>({py:a.map(x=>x.py).join(' '),zy:a.map(x=>x.zy).join(' ')});
 // 依「拼音／注音」設定，回傳要顯示的幾行（關＝沒有）
 function phLines(o){
@@ -270,7 +282,8 @@ mart:svg(GR+`<path d="M16 20H56L50 40H22Z" fill="${cB}"/><path d="M6 12H13L22 40
 
 /* ============ 遊戲 ============ */
 const ROUNDS=10;
-const st={cells:[],facing:0,angle:0,q:null,answered:false,n:0,score:0,spinning:false,dtab:'places',token:0};
+const TIME_LIMIT=10;
+const st={timerId:0,lowId:0,cells:[],facing:0,angle:0,q:null,answered:false,n:0,score:0,spinning:false,dtab:'places',token:0};
 const $=s=>document.querySelector(s);
 const pn=p=>simp()?p.zs:p.zh;
 const dn=d=>simp()?d.zs:d.zh;
@@ -279,8 +292,31 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const allowedCells=()=>G.mode==='easy'?[0,2,4,6]:[0,1,2,3,4,5,6,7];
 const defN=p=>p[FL()], indN=p=>p[FL()==='es'?'esi':'eni'], dirF=d=>d[FL()];
 
+function stopTimer(){
+  clearTimeout(st.timerId);clearTimeout(st.lowId);
+  const b=$('#tbar');b.classList.remove('on','low');
+  const i=b.firstElementChild;i.style.transition='none';i.style.width='100%';
+}
+function startTimer(){
+  stopTimer();
+  if(!G.timer||!st.q||st.answered||st.spinning)return;
+  const b=$('#tbar'),i=b.firstElementChild,tk=st.token;
+  b.classList.add('on');void i.offsetWidth;
+  i.style.transition='width '+TIME_LIMIT+'s linear';i.style.width='0%';
+  st.lowId=setTimeout(()=>b.classList.add('low'),(TIME_LIMIT-3)*1000);
+  st.timerId=setTimeout(()=>{if(tk===st.token)timeUp();},TIME_LIMIT*1000);
+}
+function timeUp(){
+  if(!st.q||st.answered)return;
+  st.answered=true;st.n++;st.q.picked=-1;
+  stopTimer();update();
+}
+const modalOpen=()=>!$('#setov').hidden||!$('#dict').hidden;
+function goNext(){
+  if(st.n>=ROUNDS)showEnd();else spin();
+}
 function newGame(){
-  st.token++;
+  st.token++;stopTimer();
   st.n=0;st.score=0;st.q=null;st.answered=false;st.spinning=false;st.facing=0;st.angle=0;
   const ch=$('#char');ch.classList.add('noanim');ch.style.transform='rotate(0deg)';ch.dataset.facing='0';
   void ch.offsetWidth;ch.classList.remove('noanim');
@@ -298,7 +334,7 @@ function spin(){
   const ch=$('#char');ch.style.transform='rotate('+st.angle+'deg)';ch.dataset.facing=String(f);
   const tk=st.token;
   update();
-  setTimeout(()=>{if(tk!==st.token)return;st.spinning=false;makeQuestion();update();},2100);
+  setTimeout(()=>{if(tk!==st.token)return;st.spinning=false;makeQuestion();update();startTimer();},2100);
 }
 
 function makeQuestion(){
@@ -313,22 +349,22 @@ function makeQuestion(){
     const others=shuffle(filled.filter(c=>c!==s)).slice(0,3).map(c=>st.cells[c]);
     options=shuffle([place,...others]).map(p=>({val:p.id,ok:p.id===place.id}));
   }
-  st.q={type,cell:s,place,rel,options};st.answered=false;
+  st.q={type,cell:s,place,rel,options,v:Math.random()<.5?1:0};st.answered=false;
 }
 
 function answer(i){
   if(!st.q||st.answered)return;
   st.answered=true;st.n++;
   if(st.q.options[i].ok)st.score++;
-  st.q.picked=i;update();
+  st.q.picked=i;stopTimer();update();
 }
 
 function optLabel(o){
-  if(st.q.type==='zai'){const d=DIRS[o.val];return Object.assign({t:'在我的'+dn(d)},J(W.zai,W.wo,W.de,d));}
+  if(st.q.type==='zai'){const d=dv(DIRS[o.val],st.q.v);return Object.assign({t:'在我的'+dn(d)},J(W.zai,W.wo,W.de,d));}
   const p=PLACES.find(x=>x.id===o.val);return Object.assign({t:'有'+pn(p)},J(W.you,p));
 }
 function fullSentence(q){
-  const d=DIRS[q.rel],p=q.place,es=FL()==='es';
+  const d=dv(DIRS[q.rel],q.v),p=q.place,es=FL()==='es';
   if(q.type==='zai')return Object.assign({t:pn(p)+'在我的'+dn(d)+'。',f:cap(defN(p))+(es?' está ':' is ')+dirF(d)+'.'},J(p,W.zai,W.wo,W.de,d));
   return Object.assign({t:'我的'+dn(d)+'有'+pn(p)+'。',f:es?cap(dirF(d))+' hay '+indN(p)+'.':'There is '+indN(p)+' '+dirF(d)+'.'},J(W.wo,W.de,d,W.you,p));
 }
@@ -354,7 +390,7 @@ function update(){
   }
   // 旋轉鈕
   const sp=$('#spin');
-  sp.innerHTML=(st.q&&st.answered)?(st.n>=ROUNDS?L('result'):L('next')):L('spin');
+  sp.innerHTML=(st.q&&st.answered)?(st.n>=ROUNDS?L('result'):L('next')):L('start');
   sp.disabled=st.spinning||!!(st.q&&!st.answered);
   // 題目區
   const qb=$('#qbox');
@@ -366,7 +402,7 @@ function update(){
     qt=pn(q.place)+'在'+tr('where')+'？';qo=J(q.place,W.zai,W.nali);
     if(hasF)qe=es?'¿Dónde está '+defN(q.place)+'?':'Where is '+defN(q.place)+'?';
   }else{
-    qt='我的'+dn(DIRS[q.rel])+'有'+tr('what')+'？';qo=J(W.wo,W.de,DIRS[q.rel],W.you,W.shme);
+    const dq=dv(DIRS[q.rel],q.v);qt='我的'+dn(dq)+'有'+tr('what')+'？';qo=J(W.wo,W.de,dq,W.you,W.shme);
     if(hasF)qe=es?'¿Qué hay '+dirF(DIRS[q.rel])+'?':'What is '+dirF(DIRS[q.rel])+'?';
   }
   const qph=phHtml(qo);
@@ -378,11 +414,11 @@ function update(){
   });
   h+='</div>';
   if(st.answered){
-    const good=q.options[q.picked].ok,fs=fullSentence(q),fph=phHtml(fs);
-    h+='<div class="fb '+(good?'ok':'bad')+'" id="fb">'+tr(good?'ok':'bad')+'<br>'+fs.t+(fph?'<div class="qp">'+fph+'</div>':'')+(hasF?'<div class="qe">'+fs.f+'</div>':'')+'</div>';
+    const good=q.picked>=0&&q.options[q.picked].ok,fs=fullSentence(q),fph=phHtml(fs);
+    h+='<div class="fb '+(good?'ok':'bad')+'" id="fb">'+tr(good?'ok':q.picked<0?'timeout':'bad')+'<br>'+fs.t+(fph?'<div class="qp">'+fph+'</div>':'')+(hasF?'<div class="qe">'+fs.f+'</div>':'')+'</div>';
   }
   qb.innerHTML=h;
-  qb.dataset.type=q.type;qb.dataset.cell=q.cell;qb.dataset.rel=q.rel;
+  qb.dataset.v=q.v;qb.dataset.type=q.type;qb.dataset.cell=q.cell;qb.dataset.rel=q.rel;
 }
 
 /* ============ 小字典 ============ */
@@ -398,7 +434,7 @@ function renderDict(){
   ['places','dirs','gram'].forEach(k=>{const b=document.querySelector('[data-tab="'+k+'"]');b.classList.toggle('on',st.dtab===k)});
   const hasF=SETTINGS.lang!=='zh';let h='';
   if(st.dtab==='places')PLACES.forEach(p=>{h+=dictRow('<i class="ic" data-icon="'+p.id+'">'+ICON[p.id]+'</i>'+pn(p),p,hasF?defN(p):'')});
-  else if(st.dtab==='dirs')DIRS.forEach(d=>{h+=dictRow(dn(d),d,hasF?dirF(d):'')});
+  else if(st.dtab==='dirs')DIRS.forEach(d=>{const a=d.alt;h+=a?dictRow(dn(d)+'／'+(simp()?a.zs:a.zh),{py:d.py+' ／ '+a.py,zy:d.zy+' ／ '+a.zy},hasF?dirF(d):''):dictRow(dn(d),d,hasF?dirF(d):'')});
   else{
     const p=PLACES[0],d=DIRS[6],a=Object.assign({t:pn(p)+'在我的'+dn(d)+'。',f:cap(defN(p))+(FL()==='es'?' está ':' is ')+dirF(d)+'.'},J(p,W.zai,W.wo,W.de,d));
     const b=Object.assign({t:'我的'+dn(d)+'有'+pn(p)+'。',f:FL()==='es'?cap(dirF(d))+' hay '+indN(p)+'.':'There is '+indN(p)+' '+dirF(d)+'.'},J(W.wo,W.de,d,W.you,p));
@@ -422,6 +458,7 @@ function drawSet(){
     lg('phon',sopt(L('pinyin'),SETTINGS.phon==='pinyin','phon','pinyin')+sopt(L('zhuyin'),SETTINGS.phon==='zhuyin','phon','zhuyin')+sopt(L('both'),SETTINGS.phon==='both','phon','both')+sopt(L('off'),SETTINGS.phon==='off','phon','off'))+
     '<div class="sgrp"><h3>'+L('diff')+'</h3><div class="sopts">'+sopt(L('easy'),G.mode==='easy','mode','easy',1)+sopt(L('hard'),G.mode==='hard','mode','hard',1)+'</div><div class="snote">'+tr('diffNote')+(fo('diffNote')?' · '+fo('diffNote'):'')+'</div></div>'+
     lg('placeText',sopt(L('show'),G.text,'text','1',1)+sopt(L('hide'),!G.text,'text','0',1))+
+    '<div class="sgrp"><h3>'+L('timerLbl')+'</h3><div class="sopts">'+sopt(L('on'),G.timer,'timer','1',1)+sopt(L('off'),!G.timer,'timer','0',1)+'</div><div class="snote">'+tr('timerNote')+(fo('timerNote')?' · '+fo('timerNote'):'')+'</div></div>'+
     lg('hintLbl',sopt(L('on'),G.hint,'hint','1',1)+sopt(L('off'),!G.hint,'hint','0',1))+
     '<button type="button" class="close" id="setDone">'+lab('done')+'</button>';
   document.querySelectorAll('#setbox .sopt').forEach(b=>b.addEventListener('click',()=>setOpt(b.dataset.k,b.dataset.v,b.dataset.g==='1')));
@@ -435,11 +472,12 @@ function setOpt(k,v,isGame){
     G.mode=v;saveG();drawSet();newGame();renderDict();return;
   }else{
     G[k]=(v==='1');saveG();
+    if(k==='timer'&&!modalOpen())startTimer();
   }
   drawSet();update();renderDict();
 }
-function openSet(){drawSet();$('#setov').hidden=false}
-function closeSet(){$('#setov').hidden=true}
+function openSet(){drawSet();$('#setov').hidden=false;stopTimer()}
+function closeSet(){$('#setov').hidden=true;if(!modalOpen())startTimer()}
 // 另一個分頁改了共用設定 → 這裡跟著更新
 window.addEventListener('storage',e=>{
   if(e.key!==SETTINGS_KEY)return;
@@ -448,12 +486,12 @@ window.addEventListener('storage',e=>{
 });
 
 /* ============ 事件 ============ */
-$('#spin').onclick=()=>{if(st.q&&st.answered&&st.n>=ROUNDS){showEnd();return}spin()};
+$('#spin').onclick=()=>{if(st.q&&st.answered){goNext();return}spin()};
 $('#qbox').onclick=e=>{const b=e.target.closest('.opt');if(b)answer(+b.dataset.i)};
 $('#gear').onclick=openSet;
 $('#setov').addEventListener('click',e=>{if(e.target.id==='setov')closeSet()});
-$('#bDict').onclick=()=>{renderDict();$('#dict').hidden=false};
-$('#dClose').onclick=()=>{$('#dict').hidden=true};
+$('#bDict').onclick=()=>{renderDict();$('#dict').hidden=false;stopTimer()};
+$('#dClose').onclick=()=>{$('#dict').hidden=true;if(!modalOpen())startTimer()};
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{st.dtab=b.dataset.tab;renderDict()});
 function showEnd(){$('#endText').textContent=tr('end')+' '+st.score+' / '+ROUNDS;$('#again').textContent=lab('again');$('#end').hidden=false}
 $('#again').onclick=newGame;
