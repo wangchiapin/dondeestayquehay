@@ -165,7 +165,7 @@ async function fullGame(page, mode) {
     ok((await h.title()) === '方位轉轉轉・¡Gira y ubica!', '網頁標題：' + await h.title());
     ok(await h.$eval('#home', e => !e.hidden) && await h.$eval('#game', e => e.hidden), '一打開是開始畫面，遊戲畫面還沒出現');
     ok(await h.$eval('#bHome', e => getComputedStyle(e).display === 'none'), '開始畫面沒有 🏠');
-    ok(await h.$eval('#bDict', e => e.offsetParent !== null) && await h.$eval('#gear', e => e.offsetParent !== null), '開始畫面有 📖 和 ⚙️');
+    ok(await h.$eval('#bHelp', e => e.offsetParent !== null) && await h.$eval('#gear', e => e.offsetParent !== null) && await h.$eval('#bDict', e => e.offsetParent === null), '開始畫面有說明鈕和 ⚙️（沒有 📖 小字典）');
     ok((await h.$eval('#hTitle', e => e.textContent)) === '方位轉轉轉' && (await h.$eval('#hSub', e => e.textContent)) === '¡Gira y ubica!', '大標題「方位轉轉轉」＋西文副標');
     ok((await h.$$('#hTitle span.t')).length === 5, '標題五個字各自可歪斜');
     const rots = await h.$$eval('#hTitle span.t', els => els.map(e => e.style.transform));
@@ -246,7 +246,40 @@ async function fullGame(page, mode) {
     const cpm = await g.evaluate(() => { const c = document.querySelector('#home .copy'); if (!c) return null; const r = c.getBoundingClientRect(), s = getComputedStyle(c), st = document.querySelector('#startHard').getBoundingClientRect(); return { text: c.textContent, pos: s.position, fs: parseFloat(s.fontSize), ta: s.textAlign, shown: s.display !== 'none' && r.height > 0, below: r.top >= st.bottom - 1, noHScroll: document.documentElement.scrollWidth <= window.innerWidth }; });
     ok(cpm && cpm.text === CP, '開始畫面有版權列，字句和 game-kit 一樣');
     ok(cpm && cpm.shown && cpm.below && cpm.pos === 'static' && cpm.fs === 10 && cpm.ta === 'center' && cpm.noHScroll, '版權列：在按鈕下方、置中、10px、不是 fixed、沒有橫向捲動');
+    // 遊戲說明（主選單右上角 ⓘ）；遊戲中換成 📖 小字典
+    ok(await g.$eval('#bHelp', e => e.offsetParent !== null) && await g.$eval('#bDict', e => e.offsetParent === null), '主選單：右上有說明鈕，沒有小字典');
+    ok((await g.$eval('#bHelp', e => e.getAttribute('aria-label'))) === '遊戲說明 · Cómo se juega' && await g.$('#bHelp svg') !== null, '說明鈕是圖示（ⓘ），說明文字：遊戲說明');
+    await g.click('#bHelp');
+    ok(await g.$eval('#help', e => !e.hidden), '按說明鈕：打開遊戲說明');
+    const hp = await g.evaluate(() => ({ title: document.querySelector('#helpTitle').textContent, rows: document.querySelectorAll('#helpBody .gr').length, es: document.querySelectorAll('#helpBody .gr .es').length, over: document.documentElement.scrollWidth > window.innerWidth }));
+    ok(hp.title.includes('遊戲說明') && hp.title.includes('Cómo se juega') && hp.rows === 5 && hp.es === 5 && !hp.over, '說明內容：標題、5 條、每條有西文、沒有橫向捲動');
+    await g.click('#helpClose');
+    ok(await g.$eval('#help', e => e.hidden), '按「關閉」：說明關掉');
+    await g.click('#bHelp'); await g.mouse.click(5, 5);
+    ok(await g.$eval('#help', e => e.hidden), '點說明視窗外面也會關掉');
+    {
+      const h2 = await fresh(null, { home: true });
+      await openSet(h2); await opt(h2, 'script', 'simp'); await opt(h2, 'lang', 'zh'); await closeSet(h2);
+      await h2.click('#bHelp');
+      const zt = await h2.$eval('#help .mbox', e => e.textContent);
+      ok(zt.includes('游戏说明') && zt.includes('进游戏后') && !/[遊戲說題時間數進]/.test(zt) && await h2.$('#helpBody .es') === null && await h2.$('#helpTitle small') === null, '說明：簡體、只有中文（沒有外語、沒有繁體字）');
+      await h2.click('#helpClose');
+      await openSet(h2); await opt(h2, 'script', 'trad'); await opt(h2, 'lang', 'en'); await closeSet(h2);
+      await h2.click('#bHelp');
+      const et = await h2.$eval('#help .mbox', e => e.textContent);
+      ok(et.includes('遊戲說明') && et.includes('How to play') && et.includes('Press “Spin”') && !et.includes('Pulsa'), '說明：繁體＋英文');
+      await h2.context().close();
+    }
+    // 矮螢幕也要整個主選單（含版權列）一屏看完，不用往下滑
+    for (const [w, hgt] of [[390, 654], [360, 640]]) {
+      const sc = await browser.newContext({ viewport: { width: w, height: hgt } });
+      const sp = await sc.newPage(); await sp.goto(url);
+      const fit = await sp.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: window.innerHeight, cb: document.querySelector('#home .copy').getBoundingClientRect().bottom }));
+      ok(fit.sh <= fit.ih && fit.cb <= fit.ih, w + '×' + hgt + ' 的螢幕：主選單一屏看完，版權列看得到（內容高 ' + fit.sh + '、版權底 ' + Math.round(fit.cb) + '）');
+      await sc.close();
+    }
     await g.click('#startEasy');
+    ok(await g.$eval('#bHelp', e => e.offsetParent === null) && await g.$eval('#bDict', e => e.offsetParent !== null), '遊戲中：說明鈕不見，📖 小字典出現');
     ok(await g.$eval('#home .copy', e => e.offsetParent === null), '進遊戲後版權列不顯示');
     // 開場說明：中文兩行、外語兩行（依句號斷開）
     const itx = await g.evaluate(() => ({ zh: document.querySelector('#qc .q').innerHTML.split('<br>'), fo: document.querySelector('#qc .qe').innerHTML.split('<br>') }));

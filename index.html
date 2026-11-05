@@ -24,7 +24,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-syst
 .close small,#cfmText small{display:block;font-size:11px;opacity:.8;font-weight:400;margin-top:2px}
 .icons{position:absolute;top:8px;right:14px;display:flex;gap:6px;z-index:3}
 #home[hidden],#game[hidden]{display:none}
-.stage{position:relative;width:min(320px,84vw);aspect-ratio:1/1;margin:58px auto 0}
+.stage{position:relative;width:min(320px,84vw);width:min(320px,84vw,38dvh);aspect-ratio:1/1;margin:52px auto 0}
 .ring{position:absolute;inset:17%;border:2px dashed var(--ring);border-radius:50%}
 .hc{position:absolute;width:21%;aspect-ratio:1/1;background:var(--card);border:2px solid var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center}
 .hc svg{width:70%;height:70%}
@@ -89,6 +89,7 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
 .mbox{background:var(--card);border:1px solid var(--line);border-radius:16px;max-width:440px;width:100%;max-height:92vh;overflow:auto;padding:12px 14px}
 .mbox h2{font-size:17px;letter-spacing:1px;margin:0 0 8px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;text-align:center}
 .mbox h2 small{display:inline;font-size:12px;color:var(--sub);font-weight:400;letter-spacing:1px}
+.helpsv{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .gearsv{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sgrp{margin-bottom:8px}
 .sgrp h3{font-size:13px;margin:0 0 4px;font-weight:600}
@@ -118,7 +119,7 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
 </head>
 <body>
 <div id="app">
-  <div class="icons"><button type="button" class="gear" id="bHome" hidden>🏠</button><button type="button" class="gear" id="bDict">📖</button><button type="button" class="gear" id="gear">⚙️</button></div>
+  <div class="icons"><button type="button" class="gear" id="bHelp"><svg class="helpsv" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.4"/><path d="M12 7.7v.1"/></svg></button><button type="button" class="gear" id="bHome" hidden>🏠</button><button type="button" class="gear" id="bDict" hidden>📖</button><button type="button" class="gear" id="gear">⚙️</button></div>
   <section id="home">
     <div class="stage" aria-hidden="true">
       <div class="ring"></div>
@@ -170,6 +171,14 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
     </div>
     <div id="dbody"></div>
     <button type="button" class="close" id="dClose"></button>
+  </div>
+</div>
+
+<div class="modal" id="help" hidden>
+  <div class="mbox">
+    <h2 id="helpTitle"></h2>
+    <div id="helpBody"></div>
+    <button type="button" class="close" id="helpClose"></button>
   </div>
 </div>
 
@@ -245,6 +254,12 @@ const T = {
   again:['再玩一次','再玩一次','Jugar otra vez','Play again'],
   close:['關閉','关闭','Cerrar','Close'],
   dict:['小字典','小字典','Mini diccionario','Mini dictionary'],
+  help:['遊戲說明','游戏说明','Cómo se juega','How to play'],
+  hp1:['按「旋轉」，角色會轉向。','按「旋转」，角色会转向。','Pulsa «Girar»: el personaje cambia de dirección.','Press “Spin”: the character turns.'],
+  hp2:['要用角色自己的方向來想：牠頭朝的方向就是「前面」。','要用角色自己的方向来想：它头朝的方向就是「前面」。','Piensa desde SU punto de vista: su «delante» es hacia donde apunta su cabeza.','Think from THEIR point of view: “front” is where its head points.'],
+  hp3:['每局 10 題，每題 10 秒；時間到算答錯。倒數可以在 ⚙️ 關掉。','每局 10 题，每题 10 秒；时间到算答错。倒数可以在 ⚙️ 关掉。','10 preguntas por ronda, 10 segundos cada una; si se acaba el tiempo cuenta como error. El cronómetro se puede apagar en ⚙️.','10 questions per round, 10 seconds each; time out counts as wrong. You can turn the countdown off in ⚙️.'],
+  hp4:['兩種題目：「…在哪裡？」和「我的…有什麼？」','两种题目：「…在哪里？」和「我的…有什么？」','Hay dos tipos de pregunta: «¿Dónde está…?» y «¿Qué hay…?»','Two kinds of questions: “Where is …?” and “What is …?”'],
+  hp5:['簡單 4 方位、困難 8 方位。進遊戲後，不懂的字詞可以按 📖 小字典查。','简单 4 方位、困难 8 方位。进游戏后，不懂的字词可以按 📖 小字典查。','Fácil: 4 direcciones; difícil: 8. Dentro del juego, 📖 abre el mini diccionario.','Easy: 4 directions; hard: 8. Inside the game, 📖 opens the mini dictionary.'],
   tPlaces:['地點','地点','Lugares','Places'],
   tDirs:['方位','方位','Direcciones','Directions'],
   tGram:['句型','句型','Estructuras','Patterns'],
@@ -500,7 +515,7 @@ function timeUp(){
   st.answered=true;st.n++;st.q.picked=-1;
   stopTimer();update();
 }
-const modalOpen=()=>!$('#setov').hidden||!$('#dict').hidden||!$('#cfm').hidden;
+const modalOpen=()=>!$('#setov').hidden||!$('#dict').hidden||!$('#cfm').hidden||!$('#help').hidden;
 function goNext(){
   if(st.n>=ROUNDS)showEnd();else spin();
 }
@@ -508,7 +523,7 @@ function goNext(){
 const TILT=[-6,0,8,-8,6];
 function titleHtml(){return [...tr('title')].map((c,i)=>'<span class="t" style="transform:rotate('+(TILT[i]||0)+'deg)">'+c+'</span>').join('')}
 function showGameView(on){
-  $('#home').hidden=on;$('#game').hidden=!on;$('#bHome').hidden=!on;
+  $('#home').hidden=on;$('#game').hidden=!on;$('#bHome').hidden=!on;$('#bDict').hidden=!on;$('#bHelp').hidden=on;
 }
 function startGame(mode){
   if(G.mode!==mode){G.mode=mode;saveG();}
@@ -588,6 +603,7 @@ function update(){
   $('#bHome').setAttribute('aria-label',lab('menu'));$('#bHome').title=lab('menu');
   $('#gear').setAttribute('aria-label',lab('settings'));
   $('#bDict').setAttribute('aria-label',lab('dict'));$('#bDict').title=lab('dict');
+  $('#bHelp').setAttribute('aria-label',lab('help'));$('#bHelp').title=lab('help');
   $('#score').textContent=st.n+' / '+ROUNDS+' '+tr('qn')+'　✓ '+st.score;
   // 格子
   for(let s=0;s<8;s++){
@@ -631,6 +647,14 @@ function update(){
   }
   qb.innerHTML=h;$('#qf').innerHTML=fbh;
   qbx.dataset.v=q.v;qbx.dataset.type=q.type;qbx.dataset.cell=q.cell;qbx.dataset.rel=q.rel;
+}
+
+/* ============ 遊戲說明 ============ */
+function renderHelp(){
+  const hasF=SETTINGS.lang!=='zh';
+  $('#helpTitle').innerHTML=tr('help')+(hasF?'<small>'+fo('help')+'</small>':'');
+  $('#helpBody').innerHTML=['hp1','hp2','hp3','hp4','hp5'].map(k=>'<div class="gr">'+tr(k)+(hasF?'<div class="es">'+fo(k)+'</div>':'')+'</div>').join('');
+  $('#helpClose').textContent=lab('close');
 }
 
 /* ============ 小字典 ============ */
@@ -702,6 +726,9 @@ $('#spin').onclick=()=>{if(st.q&&st.answered){goNext();return}spin()};
 $('#qbox').onclick=e=>{const b=e.target.closest('.opt');if(b)answer(+b.dataset.i)};
 $('#gear').onclick=openSet;
 $('#setov').addEventListener('click',e=>{if(e.target.id==='setov')closeSet()});
+$('#bHelp').onclick=()=>{renderHelp();$('#help').hidden=false};
+$('#helpClose').onclick=()=>{$('#help').hidden=true};
+$('#help').addEventListener('click',e=>{if(e.target.id==='help')$('#help').hidden=true});
 $('#bDict').onclick=()=>{renderDict();$('#dict').hidden=false;stopTimer()};
 $('#dClose').onclick=()=>{$('#dict').hidden=true;if(!modalOpen())startTimer()};
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{st.dtab=b.dataset.tab;renderDict()});
