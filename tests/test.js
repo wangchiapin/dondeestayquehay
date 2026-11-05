@@ -806,6 +806,66 @@ async function fullGame(page, mode) {
   ok(['zai', 'you', 'shen', 'which'].every(x => seenT.has(x)), '整個測試跑下來，四種題型都出現過：' + [...seenT].join(','));
   await page.context().close();
 
+  // ===== 11. 遊玩紀錄（用假的 Firebase，檢查 plays／visits 寫了什麼） =====
+  console.log('== 遊玩紀錄 ==');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const APP = 'export function initializeApp(c,n){return {c,n}}';
+    const FS = `const op=(k,p,d)=>(window.__ops=window.__ops||[]).push({k,p,d});
+export function getFirestore(app){return {app}}
+export const collection=(db,...p)=>({db,path:p.join('/')});
+export const doc=(db,...p)=>({db,path:p.join('/')});
+export const serverTimestamp=()=>'SERVER_TS';
+export async function setDoc(r,d){op('set',r.path,d)}
+export async function addDoc(c,d){op('add',c.path,d);return {id:'P'+(window.__ops.length)}}
+export async function updateDoc(r,d){op('update',r.path,d)}`;
+    const AUTH = `const a={currentUser:null,authStateReady:async()=>{}};
+export const getAuth=()=>a;
+export const signInAnonymously=async()=>{a.currentUser={uid:'UID1'};return {user:a.currentUser}};`;
+    await ctx.route(/gstatic\.com\/firebasejs/, r => {
+      const u = r.request().url();
+      r.fulfill({ status: 200, contentType: 'application/javascript', body: u.includes('firebase-app') ? APP : u.includes('firestore') ? FS : AUTH });
+    });
+    const pp = await ctx.newPage();
+    pp.on('pageerror', e => errors.push(e.message));
+    await pp.goto(url);
+    await pp.waitForFunction(() => (window.__ops || []).some(o => o.p === 'visits/' + o.p.slice(7)), null, { timeout: 8000 }).catch(() => {});
+    const ops = () => pp.evaluate(() => window.__ops || []);
+    let o = await ops();
+    const v = o.find(x => x.k === 'set' && x.p.startsWith('visits/'));
+    ok(v && v.d.game === 'fangwei', '打開頁面：記一筆訪客（game=fangwei）');
+    ok(!o.some(x => x.p === 'plays'), '只打開頁面、還沒按開始：不記遊玩');
+    await pp.click('#startEasy');
+    await pp.waitForTimeout(600);
+    o = await ops();
+    let adds = o.filter(x => x.k === 'add' && x.p === 'plays');
+    ok(adds.length === 1 && adds[0].d.game === 'fangwei' && adds[0].d.level === 'easy' && adds[0].d.done === false, '按「簡單」開始：記一局（level=easy、done=false）');
+    // 中途離開：不算玩完
+    await pp.click('#bHome'); await pp.click('#cfmLeave');
+    await pp.waitForTimeout(300);
+    o = await ops();
+    ok(!o.some(x => x.k === 'update'), '中途回主選單：沒有「玩完」更新（後台顯示沒玩完）');
+    // 困難完整玩完
+    await pp.click('#startHard');
+    await pp.waitForTimeout(400);
+    o = await ops();
+    adds = o.filter(x => x.k === 'add' && x.p === 'plays');
+    ok(adds.length === 2 && adds[1].d.level === 'hard', '按「困難」開始：再記一局（level=hard）');
+    let correct = 0;
+    for (let i = 0; i < 10; i++) { const want = i % 2 === 0; if (want) correct++; await playRound(pp, 'hard', want); }
+    ok(!(await ops()).some(x => x.k === 'update'), '答完第 10 題、還沒看結果：還不算玩完');
+    await pp.click('#spin');
+    await pp.waitForTimeout(500);
+    o = await ops();
+    const up = o.filter(x => x.k === 'update');
+    ok(up.length === 1 && up[0].d.done === true && up[0].d.score === correct && up[0].p === 'plays/P' + (o.map((x, i) => (x.k === 'add' && x.p === 'plays' && x.d.level === 'hard') ? i : -1).filter(i => i >= 0)[0] + 1), `跑到結算畫面：更新那一局為玩完，分數 ${correct}`);
+    await pp.click('#again');
+    await pp.waitForTimeout(400);
+    adds = (await ops()).filter(x => x.k === 'add' && x.p === 'plays');
+    ok(adds.length === 3 && adds[2].d.level === 'hard', '按「再玩一次」：記新的一局');
+    await ctx.close();
+  }
+
   ok(errors.length === 0, '沒有 JS 錯誤' + (errors.length ? '：' + errors.join('; ') : ''));
   await browser.close();
   console.log(fails === 0 ? '\n全部通過' : `\n${fails} 項失敗`);
