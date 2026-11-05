@@ -240,6 +240,17 @@ async function fullGame(page, mode) {
     ok(meta['og:image'].startsWith('https://wangchiapin.github.io/dondeestayquehay/og.jpg') && meta['og:image:width'] === '1200' && meta['og:image:height'] === '630', 'og:image 絕對網址與 1200×630');
     ok(meta['twitter:card'] === 'summary_large_image', 'twitter:card');
     ok(await g.$eval('link[rel="icon"]', e => e.getAttribute('href')) === 'icon.png' && await g.$eval('link[rel="apple-touch-icon"]', e => e.getAttribute('href')) === 'icon.png', '桌面小圖示連結');
+    // 版權列（照 game-kit/parts/copyright.js 的字句與樣式）：只放在開始畫面最下面，遊戲中不顯示，也不讓全域那一行再出現一次
+    const CP = '© 2026 @cadadiaunosminutos_ben_chino ｜ 保留所有權利 / Todos los derechos reservados';
+    ok(await g.$eval('html', e => e.hasAttribute('data-hg-nocopy')) && await g.$('#hgCopy') === null, '<html> 有 data-hg-nocopy，不會多出全域那一行版權');
+    const cpm = await g.evaluate(() => { const c = document.querySelector('#home .copy'); if (!c) return null; const r = c.getBoundingClientRect(), s = getComputedStyle(c), st = document.querySelector('#startHard').getBoundingClientRect(); return { text: c.textContent, pos: s.position, fs: parseFloat(s.fontSize), ta: s.textAlign, shown: s.display !== 'none' && r.height > 0, below: r.top >= st.bottom - 1, noHScroll: document.documentElement.scrollWidth <= window.innerWidth }; });
+    ok(cpm && cpm.text === CP, '開始畫面有版權列，字句和 game-kit 一樣');
+    ok(cpm && cpm.shown && cpm.below && cpm.pos === 'static' && cpm.fs === 10 && cpm.ta === 'center' && cpm.noHScroll, '版權列：在按鈕下方、置中、10px、不是 fixed、沒有橫向捲動');
+    await g.click('#startEasy');
+    ok(await g.$eval('#home .copy', e => e.offsetParent === null), '進遊戲後版權列不顯示');
+    // 開場說明：中文兩行、外語兩行（依句號斷開）
+    const itx = await g.evaluate(() => ({ zh: document.querySelector('#qc .q').innerHTML.split('<br>'), fo: document.querySelector('#qc .qe').innerHTML.split('<br>') }));
+    ok(itx.zh.length === 2 && itx.fo.length === 2 && itx.zh[0].endsWith('。') && itx.zh[1].endsWith('！') && itx.fo[0].endsWith('.') && itx.fo[1].startsWith('¡'), '開場說明：中文兩行、西文兩行：' + itx.zh.join(' / ') + ' | ' + itx.fo.join(' / '));
     await g.context().close();
     const root = path.resolve(__dirname, '..');
     const jpg = fs.readFileSync(path.join(root, 'og.jpg'));
@@ -338,20 +349,26 @@ async function fullGame(page, mode) {
   await spinToQuestion(page);
   await openSet(page);
   ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))).includes('Mini diccionario'), '西文：小字典圖示的說明文字是西文');
-  ok((await page.$eval('.qe', e => e.textContent)).startsWith('¿'), '西文：題目下有西文翻譯 ' + await page.$eval('.qe', e => e.textContent));
+  ok(await page.$('#qc .qe') === null, '西文：題目下沒有外語翻譯（考的時候不給答案）');
+  {
+    const f = await fresh(); await spinToQuestion(f); await f.click('.opt[data-i="0"]');
+    const fq = await f.$eval('#fb .qe', e => e.textContent);
+    ok(fq.length > 5 && /[¿.]/.test(fq), '西文：答完後的回饋句有西文翻譯 ' + fq);
+    await f.context().close();
+  }
   ok(await page.$eval('#spin small', e => e.textContent === 'Girar'), '西文：旋轉鈕小字 Girar');
   await opt(page, 'lang', 'en');
   s = await stored(page);
   ok(s.lang === 'en' && await isOn(page, 'lang', 'en'), '切到英文，存檔 lang=en');
   ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))).includes('Mini dictionary'), '英文：小字典圖示的說明文字是英文');
-  ok(/^(Where is|What is)/.test(await page.$eval('.qe', e => e.textContent)), '英文：題目翻譯 ' + await page.$eval('.qe', e => e.textContent));
+  ok(await page.$('#qc .qe') === null, '英文：題目下沒有外語翻譯');
   ok(await page.$eval('#spin small', e => e.textContent === 'Spin'), '英文：旋轉鈕小字 Spin');
   ok(await page.$eval('html', e => e.lang) === 'en', '英文：html lang=en');
   await opt(page, 'lang', 'zh');
   s = await stored(page);
   ok(s.lang === 'zh' && await isOn(page, 'lang', 'zh'), '切到只有中文，存檔 lang=zh');
   ok((await page.$eval('#bDict', e => e.getAttribute('aria-label'))) === '小字典', '純中文：小字典圖示只有中文說明');
-  ok(await page.$('.qe') === null, '純中文：題目下沒有外語');
+  ok(await page.$('#qc .qe') === null, '純中文：題目下沒有外語');
   ok(await page.$('#spin small') === null, '純中文：旋轉鈕沒有小字');
   ok(await page.$('#setbox h2 small') === null, '純中文：設定標題沒有小字');
   await closeSet(page);

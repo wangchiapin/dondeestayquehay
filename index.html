@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-hg-nocopy>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -42,6 +42,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-syst
 .start.main{background:var(--accent);color:#fff;border-color:var(--accent)}
 .mini{display:inline-block;width:30px;height:30px;vertical-align:-7px;margin-right:6px}
 .mini svg{width:100%;height:100%;animation:slowspin 12s linear infinite}
+.copy{display:block;width:100%;box-sizing:border-box;margin-top:18px;padding:6px 0 0;text-align:center;font:10px/1.4 system-ui,-apple-system,"Noto Sans TC",sans-serif;color:rgba(120,120,120,.85);user-select:none;position:static}
 .btns2{display:flex;gap:10px;margin-top:12px}.btns2 .close{margin:0;flex:1}
 .ttl{min-width:0}
 h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap}
@@ -134,6 +135,7 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
     <div class="bigt" id="hTitle"></div>
     <div class="hsub" id="hSub"></div>
     <div class="starts"><button type="button" class="start" id="startEasy"></button><button type="button" class="start" id="startHard"></button></div>
+    <div class="copy">© 2026 @cadadiaunosminutos_ben_chino ｜ 保留所有權利 / Todos los derechos reservados</div>
   </section>
   <section id="game" hidden>
     <div class="top"><div class="ttl"><h1><span class="mini" id="miniChar"><svg viewBox="0 0 100 100" aria-hidden="true">
@@ -236,7 +238,7 @@ const T = {
   timerLbl:['倒數計時','倒数计时','Cuenta regresiva','Countdown'],
   timerNote:['每題 10 秒，時間到算答錯','每题 10 秒，时间到算答错','10 segundos por pregunta; si se acaba, cuenta como error','10 seconds per question; time out counts as wrong'],
   result:['看結果','看结果','Ver resultado','See result'],
-  intro:['按「旋轉」，角色會轉向。要用角色自己的方向來想！','按「旋转」，角色会转向。要用角色自己的方向来想！','Pulsa «Girar»: el personaje cambia de dirección. ¡Piensa desde SU punto de vista!','Press “Spin”: the character turns. Think from THEIR point of view!'],
+  intro:['按「旋轉」，角色會轉向。<br>要用角色自己的方向來想！','按「旋转」，角色会转向。<br>要用角色自己的方向来想！','Pulsa «Girar»: el personaje cambia de dirección.<br>¡Piensa desde SU punto de vista!','Press “Spin”: the character turns.<br>Think from THEIR point of view!'],
   ok:['答對了！','答对了！','¡Correcto!','Correct!'],
   bad:['答錯了。正確：','答错了。正确：','Incorrecto. Correcto:','Wrong. Correct:'],
   end:['完成！答對','完成！答对','¡Terminado! Aciertos','Done! Correct'],
@@ -611,10 +613,8 @@ function update(){
   const q=st.q,es=FL()==='es',hasF=SETTINGS.lang!=='zh';let qt,qo,qe='';
   if(q.type==='zai'){
     qt=pn(q.place)+'在'+tr('where')+'？';qo=J(q.place,W.zai,W.nali);
-    if(hasF)qe=es?'¿Dónde está '+defN(q.place)+'?':'Where is '+defN(q.place)+'?';
   }else{
     const dq=dv(DIRS[q.rel],q.v);qt='我的'+dn(dq)+'有'+tr('what')+'？';qo=J(W.wo,W.de,dq,W.you,W.shme);
-    if(hasF)qe=es?'¿Qué hay '+dirF(DIRS[q.rel])+'?':'What is '+dirF(DIRS[q.rel])+'?';
   }
   const qph=phHtml(qo);
   let h='<div class="q">'+qt+'</div>'+(qph?'<div class="qp">'+qph+'</div>':'')+(qe?'<div class="qe">'+qe+'</div>':'')+'<div class="opts">';
