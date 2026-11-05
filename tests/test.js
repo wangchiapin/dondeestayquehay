@@ -254,6 +254,19 @@ async function fullGame(page, mode) {
   console.log('== 初始與設定視窗 ==');
   let page = await fresh();
   ok(await page.$('#gear') !== null, '右上角有 ⚙️');
+  {
+    // 遊戲中標題：夠大（24px）、小角色圖跟著放大、不被右上三顆圓按鈕擠到、整頁不用上下滑
+    const t = await page.evaluate(() => {
+      const h = document.querySelector('h1'), r = h.getBoundingClientRect(), m = document.querySelector('.mini').getBoundingClientRect();
+      const icons = document.querySelector('.icons').getBoundingClientRect(), title = document.querySelector('#title').getBoundingClientRect();
+      return { fs: parseFloat(getComputedStyle(h).fontSize), mini: m.width, titleRight: title.right, iconsLeft: icons.left, left: r.left,
+        sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth };
+    });
+    ok(t.fs >= 24, '遊戲中標題字級 ≥ 24px（' + t.fs + '）');
+    ok(t.mini >= 30, '標題旁小角色圖 ≥ 30px（' + t.mini + '）');
+    ok(t.titleRight <= t.iconsLeft - 4, '標題沒被右上按鈕擠到（' + Math.round(t.titleRight) + ' ≤ ' + Math.round(t.iconsLeft) + '）');
+    ok(t.sw <= t.cw, '標題放大後頁面沒有橫向捲動');
+  }
   for (const id of ['#bMode', '#bScript', '#bText', '#bPy', '#bHint']) ok(await page.$(id) === null, `舊工具列按鈕 ${id} 已移除`);
   ok(await page.$('#bDict') !== null, '小字典按鈕還在畫面上');
   ok(await page.$eval('#setov', e => e.hidden), '一開始設定視窗是關的');
