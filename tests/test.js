@@ -19,6 +19,7 @@ const ok = (c, msg) => { if (!c) { fails++; console.log('✗ ' + msg); } else co
 const DIRS_T = ['前面','右前方','右邊','右後方','後面','左後方','左邊','左前方'];      // 標準說法（提示標籤、字典用）
 const DIRS_ALT = ['正前方','右前方','右手邊','右後方','正後方','左後方','左手邊','左前方']; // 另一種常見說法
 const seenV = new Set();
+const seenT = new Set();   // 出現過的題型：zai 在、you 有、shen 什麼在、which 哪個方位有
 const TONE = /[āáǎàēéěèīíǐìōóǒòūúǔùü]/;   // 拼音聲調字母
 const ZY = /[ㄅ-ㄩ]/;                          // 注音符號
 
@@ -69,15 +70,23 @@ async function playRound(page, mode, wantCorrect) {
   const ci = info.correct.indexOf('1');
   ok(info.correct.filter(c => c === '1').length === 1, '只有一個正確選項');
   ok(info.texts.length === 4, '4 個選項');
-  seenV.add(info.v);
+  seenV.add(info.v); seenT.add(info.type);
   const names = info.v ? DIRS_ALT : DIRS_T;
   ok(await tbarOn(page), '出題後倒數條開始跑');
+  const placeName = await page.$eval('#cell-' + info.cell, e => e.dataset.name);
   if (info.type === 'zai') {
     ok(info.texts[ci] === '在我的' + names[info.rel], '「在」題正確答案文字：' + info.texts[ci]);
     ok(info.texts.every(t => names.map(n => '在我的' + n).includes(t)), '4 個選項用同一種說法（' + (info.v ? '正前方類' : '前面類') + '）');
-  } else ok(info.q === '我的' + names[info.rel] + '有什麼？', '「有」題題目用同一種說法：' + info.q);
-  const placeName = await page.$eval('#cell-' + info.cell, e => e.dataset.name);
-  if (info.type === 'you') ok(info.texts[ci] === '有' + placeName, '「有」題正確答案文字：' + info.texts[ci]);
+  } else if (info.type === 'you') {
+    ok(info.q === '我的' + names[info.rel] + '有什麼？', '「有」題題目用同一種說法：' + info.q);
+    ok(info.texts[ci] === '有' + placeName, '「有」題正確答案文字：' + info.texts[ci]);
+  } else if (info.type === 'shen') {
+    ok(info.q === '什麼在我的' + names[info.rel] + '？', '「什麼在我的…？」題目用同一種說法：' + info.q);
+    ok(info.texts[ci] === placeName && info.texts.every(t => !t.startsWith('有') && !t.startsWith('在')), '「什麼在」題：選項只有地點名稱，正確答案 ' + info.texts[ci]);
+  } else {
+    ok(info.type === 'which' && info.q === '我的哪個方位有' + placeName + '？', '「哪個方位有」題目：' + info.q);
+    ok(info.texts[ci] === names[info.rel] && info.texts.every(t => names.includes(t)), '「哪個方位有」題：選項只有方位詞（同一種說法），正確答案 ' + info.texts[ci]);
+  }
   let pickIdx = ci;
   if (!wantCorrect) pickIdx = info.correct.findIndex(c => c === '0');
   await page.click(`.opt[data-i="${pickIdx}"]`);
@@ -617,7 +626,7 @@ async function fullGame(page, mode) {
   const dirTxt = await page.$eval('#dbody', e => e.textContent);
   ok(['前面','正前方','右邊','右手邊','後面','正後方','左邊','左手邊','右前方','右後方','左後方','左前方'].every(w => dirTxt.includes(w)), '方位分頁同時列出常見說法：正前方、正後方、左手邊、右手邊');
   await page.click('#tGram');
-  ok((await page.$$('#dbody .gr')).length === 3, '句型分頁 3 則');
+  ok((await page.$$('#dbody .gr')).length === 5, '句型分頁 5 則（在、有、什麼在、哪個方位有、方向說明）');
   await page.click('#dClose');
   ok(await page.$eval('#dict', e => e.hidden), '字典關閉');
   await openSet(page);
@@ -679,7 +688,26 @@ async function fullGame(page, mode) {
     ok(Math.abs(r.title.top - r.dict.top) < 30 && Math.abs(r.gear.top - r.dict.top) < 2, '標題、📖、⚙️ 在同一列');
     ok(r.dict.width < 50 && r.gear.width < 50 && r.dict.right < r.gear.left, '📖 在 ⚙️ 左邊，兩個都是小圖示');
     ok(r.score.top >= r.title.bottom - 2 && r.score.bottom < r.board.top, '分數在標題下方，棋盤之前');
-    ok(r.board.width / r.iw > 0.68 && r.board.width / r.iw < 0.76, '棋盤縮到約 7 成寬（' + Math.round(r.board.width) + 'px）');
+    ok(r.board.width <= r.iw * 0.95 && r.board.width >= 300, '圓形棋盤寬度合理（' + Math.round(r.board.width) + 'px）');
+    // 圓形：地點沿圈排開（第 k 格在順時針 45°×k），彼此不重疊，都在棋盤裡面，動物在正中間
+    const circle = () => page.evaluate(() => {
+      const bb = document.querySelector('#board').getBoundingClientRect(), cx = bb.left + bb.width / 2, cy = bb.top + bb.height / 2;
+      const cells = [...document.querySelectorAll('.cell:not(.empty)')].map(e => { const r = e.getBoundingClientRect(); return { s: +e.dataset.s, x: r.left + r.width / 2 - cx, y: r.top + r.height / 2 - cy, r }; });
+      const ch = document.querySelector('#char').getBoundingClientRect();
+      let overlap = 0;
+      for (let i = 0; i < cells.length; i++) for (let j = i + 1; j < cells.length; j++) { const a = cells[i].r, b = cells[j].r; if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) overlap++; }
+      return { bw: bb.width, n: cells.length, overlap,
+        badR: cells.filter(c => Math.abs(Math.hypot(c.x, c.y) - bb.width * 0.37) > 3).length,
+        badAng: cells.filter(c => { let d = ((Math.atan2(c.x, -c.y) * 180 / Math.PI) + 360) % 360 - c.s * 45; d = ((d + 540) % 360) - 180; return Math.abs(d) > 2; }).length,
+        outside: cells.filter(c => c.r.left < bb.left - 1 || c.r.right > bb.right + 1 || c.r.top < bb.top - 1 || c.r.bottom > bb.bottom + 1).length,
+        charMid: Math.abs(ch.left + ch.width / 2 - cx) < 3 && Math.abs(ch.top + ch.height / 2 - cy) < 3 };
+    });
+    const ce = await circle();
+    ok(ce.n === 4 && ce.overlap === 0 && ce.badR === 0 && ce.badAng === 0 && ce.outside === 0 && ce.charMid, '簡單：4 個地點在圓圈上（上、右、下、左），不重疊，動物在正中間');
+    await openSet(page); await opt(page, 'mode', 'hard'); await closeSet(page);
+    const ch8 = await circle();
+    ok(ch8.n === 8 && ch8.overlap === 0 && ch8.badR === 0 && ch8.badAng === 0 && ch8.outside === 0 && ch8.charMid, '困難：8 個地點每 45° 一個，不重疊，動物在正中間');
+    ok(await page.$eval('#board', e => getComputedStyle(e, '::before').borderTopStyle === 'dashed'), '圓圈虛線');
     ok(Math.abs(r.board.left + r.board.width / 2 - r.iw / 2) < 2, '棋盤置中');
     ok(r.spinInBox, '旋轉鈕在題目卡裡面');
     ok(r.sw <= r.iw, '沒有橫向捲動');
@@ -775,6 +803,7 @@ async function fullGame(page, mode) {
   await closeSet(page);
   await fullGame(page, 'hard');
   ok(seenV.has(0) && seenV.has(1), '兩輪下來，兩種說法都出現過');
+  ok(['zai', 'you', 'shen', 'which'].every(x => seenT.has(x)), '整個測試跑下來，四種題型都出現過：' + [...seenT].join(','));
   await page.context().close();
 
   ok(errors.length === 0, '沒有 JS 錯誤' + (errors.length ? '：' + errors.join('; ') : ''));

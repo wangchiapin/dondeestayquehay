@@ -49,9 +49,18 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
 .score{font-size:13px;color:var(--sub);margin-top:1px}
 .icons{display:flex;gap:6px;flex:none}
 .gear{width:38px;height:38px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:18px;display:flex;align-items:center;justify-content:center}
-#board{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:5px;aspect-ratio:1/1;width:76%;margin:0 auto}
-.cell{background:var(--card);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2px;position:relative;min-width:0}
-.cell.empty{background:transparent;border:1px dashed var(--line)}
+#board{position:relative;width:min(350px,94vw);aspect-ratio:1/1;margin:4px auto 0}
+#board::before{content:"";position:absolute;inset:15%;border:2px dashed var(--ring);border-radius:50%}
+#cell-0{left:50.00%;top:13.00%}
+#cell-1{left:76.16%;top:23.84%}
+#cell-2{left:87.00%;top:50.00%}
+#cell-3{left:76.16%;top:76.16%}
+#cell-4{left:50.00%;top:87.00%}
+#cell-5{left:23.84%;top:76.16%}
+#cell-6{left:13.00%;top:50.00%}
+#cell-7{left:23.84%;top:23.84%}
+.cell{position:absolute;width:23%;height:24%;transform:translate(-50%,-50%);background:var(--card);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2px;min-width:0}
+.cell.empty{display:none}
 .cell .img{flex:1;min-height:0;width:78%;display:flex;align-items:center;justify-content:center;margin-top:12px}
 .cell .img svg{width:100%;height:100%}
 .cell.notext .img{margin-top:8px;margin-bottom:4px;width:84%}
@@ -59,7 +68,7 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
 .cell .p{font-size:9px;color:var(--sub);line-height:1.2}
 .cell .h{position:absolute;top:3px;left:0;right:0;font-size:10px;color:var(--accent)}
 .cell.target{outline:3px solid var(--accent)}
-.center{background:transparent;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;border-radius:10px;grid-row:2;grid-column:2}
+.center{position:absolute;left:50%;top:50%;width:30%;aspect-ratio:1/1;transform:translate(-50%,-50%);background:transparent;display:flex;align-items:center;justify-content:center}
 #char{width:78%;aspect-ratio:1/1;transition:transform 2s cubic-bezier(.2,.7,.2,1)}
 #char.noanim{transition:none}
 #spin{display:block;margin:10px auto 0;font:inherit;font-size:16px;padding:8px 28px;border:none;border-radius:10px;background:var(--accent);color:#fff;text-align:center}
@@ -143,19 +152,19 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
         
       </svg></span><span id="title"></span></h1><div class="score" id="score"></div></div></div>
   <div id="board">
-    <div class="cell" id="cell-7" data-s="7" style="grid-row:1;grid-column:1"></div>
-    <div class="cell" id="cell-0" data-s="0" style="grid-row:1;grid-column:2"></div>
-    <div class="cell" id="cell-1" data-s="1" style="grid-row:1;grid-column:3"></div>
-    <div class="cell" id="cell-6" data-s="6" style="grid-row:2;grid-column:1"></div>
+    <div class="cell" id="cell-7" data-s="7"></div>
+    <div class="cell" id="cell-0" data-s="0"></div>
+    <div class="cell" id="cell-1" data-s="1"></div>
+    <div class="cell" id="cell-6" data-s="6"></div>
     <div class="center">
       <svg id="char" viewBox="0 0 100 100" data-facing="0" aria-label="character">
         
       </svg>
     </div>
-    <div class="cell" id="cell-2" data-s="2" style="grid-row:2;grid-column:3"></div>
-    <div class="cell" id="cell-5" data-s="5" style="grid-row:3;grid-column:1"></div>
-    <div class="cell" id="cell-4" data-s="4" style="grid-row:3;grid-column:2"></div>
-    <div class="cell" id="cell-3" data-s="3" style="grid-row:3;grid-column:3"></div>
+    <div class="cell" id="cell-2" data-s="2"></div>
+    <div class="cell" id="cell-5" data-s="5"></div>
+    <div class="cell" id="cell-4" data-s="4"></div>
+    <div class="cell" id="cell-3" data-s="3"></div>
   </div>
   <div id="tbar"><i></i></div>
   <section id="qbox"><div id="qc"></div><button type="button" id="spin"></button><div id="qf"></div></section>
@@ -258,7 +267,7 @@ const T = {
   hp1:['按「旋轉」，角色會轉向。','按「旋转」，角色会转向。','Pulsa «Girar»: el personaje cambia de dirección.','Press “Spin”: the character turns.'],
   hp2:['要用角色自己的方向來想：牠頭朝的方向就是「前面」。','要用角色自己的方向来想：它头朝的方向就是「前面」。','Piensa desde SU punto de vista: su «delante» es hacia donde apunta su cabeza.','Think from THEIR point of view: “front” is where its head points.'],
   hp3:['每局 10 題，每題 10 秒；時間到算答錯。倒數可以在 ⚙️ 關掉。','每局 10 题，每题 10 秒；时间到算答错。倒数可以在 ⚙️ 关掉。','10 preguntas por ronda, 10 segundos cada una; si se acaba el tiempo cuenta como error. El cronómetro se puede apagar en ⚙️.','10 questions per round, 10 seconds each; time out counts as wrong. You can turn the countdown off in ⚙️.'],
-  hp4:['兩種題目：「…在哪裡？」和「我的…有什麼？」','两种题目：「…在哪里？」和「我的…有什么？」','Hay dos tipos de pregunta: «¿Dónde está…?» y «¿Qué hay…?»','Two kinds of questions: “Where is …?” and “What is …?”'],
+  hp4:['四種題目：「…在哪裡？」「我的…有什麼？」「什麼在我的…？」「我的哪個方位有…？」','四种题目：「…在哪里？」「我的…有什么？」「什么在我的…？」「我的哪个方位有…？」','Hay cuatro tipos de pregunta: «¿Dónde está…?», «¿Qué hay…?», «¿Qué está…?» y «¿En qué dirección hay…?»','Four kinds of questions: “Where is …?”, “What is there …?”, “What is …?” and “Which direction has …?”'],
   hp5:['簡單 4 方位、困難 8 方位。進遊戲後，不懂的字詞可以按 📖 小字典查。','简单 4 方位、困难 8 方位。进游戏后，不懂的字词可以按 📖 小字典查。','Fácil: 4 direcciones; difícil: 8. Dentro del juego, 📖 abre el mini diccionario.','Easy: 4 directions; hard: 8. Inside the game, 📖 opens the mini dictionary.'],
   tPlaces:['地點','地点','Lugares','Places'],
   tDirs:['方位','方位','Direcciones','Directions'],
@@ -290,6 +299,7 @@ const T = {
   dFront:['前','前','',''],dBack:['後','后','',''],dLeft:['左','左','',''],dRight:['右','右','',''],
   where:['哪裡','哪里','',''],
   what:['什麼','什么','',''],
+  whichdir:['哪個方位','哪个方位','',''],
   gzai:['在','在','estar (ubicación)','to be (located)'],
   gyou:['有','有','haber / existir','there is / to exist'],
   gdir:['前、後、左、右','前、后、左、右','',''],
@@ -328,7 +338,7 @@ const DIRS=[
   {zh:'左邊',zs:'左边',py:'zuǒbiān',zy:'ㄗㄨㄛˇ ㄅㄧㄢ',alt:{zh:'左手邊',zs:'左手边',py:'zuǒshǒubiān',zy:'ㄗㄨㄛˇ ㄕㄡˇ ㄅㄧㄢ'},es:'a la izquierda',en:'to my left'},
   {zh:'左前方',zs:'左前方',py:'zuǒ qiánfāng',zy:'ㄗㄨㄛˇ ㄑㄧㄢˊ ㄈㄤ',es:'delante a la izquierda',en:'ahead to my left'}
 ];
-const W={ zai:{py:'zài',zy:'ㄗㄞˋ'}, wo:{py:'wǒ',zy:'ㄨㄛˇ'}, de:{py:'de',zy:'˙ㄉㄜ'}, you:{py:'yǒu',zy:'ㄧㄡˇ'}, nali:{py:'nǎlǐ',zy:'ㄋㄚˇ ㄌㄧˇ'}, shme:{py:'shénme',zy:'ㄕㄣˊ ˙ㄇㄜ'} };
+const W={ zai:{py:'zài',zy:'ㄗㄞˋ'}, wo:{py:'wǒ',zy:'ㄨㄛˇ'}, de:{py:'de',zy:'˙ㄉㄜ'}, you:{py:'yǒu',zy:'ㄧㄡˇ'}, nali:{py:'nǎlǐ',zy:'ㄋㄚˇ ㄌㄧˇ'}, nage:{py:'nǎge',zy:'ㄋㄚˇ ˙ㄍㄜ'}, fw:{py:'fāngwèi',zy:'ㄈㄤ ㄨㄟˋ'}, shme:{py:'shénme',zy:'ㄕㄣˊ ˙ㄇㄜ'} };
 // 同一方位的常見說法：v=1 用 alt（正前方、左手邊…），沒有 alt 的方位維持原詞
 const dv=(d,v)=>v&&d.alt?Object.assign({},d,d.alt):d;
 const J=(...a)=>({py:a.map(x=>x.py).join(' '),zy:a.map(x=>x.zy).join(' ')});
@@ -565,9 +575,9 @@ function spin(){
 function makeQuestion(){
   const filled=[];st.cells.forEach((p,i)=>{if(p)filled.push(i)});
   const s=pick(filled),place=st.cells[s],rel=(s-st.facing+8)%8;
-  const type=Math.random()<.5?'zai':'you';
+  const type=pick(['zai','you','shen','which']);
   let options;
-  if(type==='zai'){
+  if(type==='zai'||type==='which'){
     const others=shuffle(allowedCells().filter(r=>r!==rel)).slice(0,3);
     options=shuffle([rel,...others]).map(r=>({val:r,ok:r===rel}));
   }else{
@@ -585,12 +595,16 @@ function answer(i){
 }
 
 function optLabel(o){
-  if(st.q.type==='zai'){const d=dv(DIRS[o.val],st.q.v);return Object.assign({t:'在我的'+dn(d)},J(W.zai,W.wo,W.de,d));}
-  const p=PLACES.find(x=>x.id===o.val);return Object.assign({t:'有'+pn(p)},J(W.you,p));
+  const ty=st.q.type;
+  if(ty==='zai'){const d=dv(DIRS[o.val],st.q.v);return Object.assign({t:'在我的'+dn(d)},J(W.zai,W.wo,W.de,d));}
+  if(ty==='which'){const d=dv(DIRS[o.val],st.q.v);return Object.assign({t:dn(d)},J(d));}
+  const p=PLACES.find(x=>x.id===o.val);
+  if(ty==='shen')return Object.assign({t:pn(p)},J(p));
+  return Object.assign({t:'有'+pn(p)},J(W.you,p));
 }
 function fullSentence(q){
   const d=dv(DIRS[q.rel],q.v),p=q.place,es=FL()==='es';
-  if(q.type==='zai')return Object.assign({t:pn(p)+'在我的'+dn(d)+'。',f:cap(defN(p))+(es?' está ':' is ')+dirF(d)+'.'},J(p,W.zai,W.wo,W.de,d));
+  if(q.type==='zai'||q.type==='shen')return Object.assign({t:pn(p)+'在我的'+dn(d)+'。',f:cap(defN(p))+(es?' está ':' is ')+dirF(d)+'.'},J(p,W.zai,W.wo,W.de,d));
   return Object.assign({t:'我的'+dn(d)+'有'+pn(p)+'。',f:es?cap(dirF(d))+' hay '+indN(p)+'.':'There is '+indN(p)+' '+dirF(d)+'.'},J(W.wo,W.de,d,W.you,p));
 }
 
@@ -629,6 +643,10 @@ function update(){
   const q=st.q,es=FL()==='es',hasF=SETTINGS.lang!=='zh';let qt,qo,qe='';
   if(q.type==='zai'){
     qt=pn(q.place)+'在'+tr('where')+'？';qo=J(q.place,W.zai,W.nali);
+  }else if(q.type==='shen'){
+    const dq=dv(DIRS[q.rel],q.v);qt=tr('what')+'在我的'+dn(dq)+'？';qo=J(W.shme,W.zai,W.wo,W.de,dq);
+  }else if(q.type==='which'){
+    qt='我的'+tr('whichdir')+'有'+pn(q.place)+'？';qo=J(W.wo,W.de,W.nage,W.fw,W.you,q.place);
   }else{
     const dq=dv(DIRS[q.rel],q.v);qt='我的'+dn(dq)+'有'+tr('what')+'？';qo=J(W.wo,W.de,dq,W.you,W.shme);
   }
@@ -678,6 +696,10 @@ function renderDict(){
     const ph1=phHtml(W.zai),ph2=phHtml(W.you);
     h+=gr('在'+(ph1?' '+ph1.replace('<br>',' '):''),fo('gzai'),a);
     h+=gr('有'+(ph2?' '+ph2.replace('<br>',' '):''),fo('gyou'),b);
+    const gq=(head,o,gl)=>'<div class="gr"><b>'+head+'</b>'+(phHtml(o)?'<div class="py">'+phHtml(o)+'</div>':'')+(hasF?'<div class="es">'+gl+'</div>':'')+'</div>';
+    const es=FL()==='es';
+    h+=gq(tr('what')+'在我的'+dn(d)+'？',J(W.shme,W.zai,W.wo,W.de,d),es?'¿Qué está a mi izquierda?':'What is on my left?');
+    h+=gq('我的'+tr('whichdir')+'有'+pn(p)+'？',J(W.wo,W.de,W.nage,W.fw,W.you,p),es?'¿En qué dirección hay '+indN(p)+'?':'In which direction is there '+indN(p)+'?');
     h+='<div class="gr"><b>'+tr('gdir')+'</b><br>'+tr('gdirNote')+(hasF?'<div class="es">'+fo('gdirNote')+'</div>':'')+'</div>';
   }
   $('#dbody').innerHTML=h;
