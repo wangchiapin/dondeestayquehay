@@ -615,12 +615,15 @@ async function fullGame(page, mode) {
   // ===== 9. 小字典 =====
   console.log('== 小字典 ==');
   page = await fresh();
+  const boardNames = await cellNames(page);
   await page.click('#bDict');
   ok(await page.$eval('#dict', e => !e.hidden), '字典開啟');
-  ok((await page.$$('#dbody .row')).length === 12, '地點分頁 12 筆');
-  ok((await page.$$('#dbody .row .ic svg')).length === 12, '地點分頁每筆都有圖片');
+  ok((await page.$$('#dbody .row')).length === 4, '簡單：地點分頁只有 4 筆（只列棋盤上的地點，不是全部 50 個）');
+  const dictNames = await page.$$eval('#dbody .row .nm', els => els.map(e => e.textContent.trim()));
+  ok(JSON.stringify([...dictNames].sort()) === JSON.stringify([...boardNames].sort()), '字典列的就是棋盤上的 4 個地點：' + dictNames.join('、'));
+  ok((await page.$$('#dbody .row .ic svg')).length === 4, '地點分頁每筆都有圖片');
   const dIcons = await page.$$eval('#dbody .row .ic', els => els.map(e => e.innerHTML));
-  ok(new Set(dIcons).size === 12, '12 張地點圖片各不相同');
+  ok(new Set(dIcons).size === 4, '4 張地點圖片各不相同');
   await page.click('#tDirs');
   ok((await page.$$('#dbody .row')).length === 8, '方位分頁 8 筆');
   const dirTxt = await page.$eval('#dbody', e => e.textContent);
@@ -634,8 +637,66 @@ async function fullGame(page, mode) {
   await closeSet(page);
   await page.click('#bDict');
   await page.click('#tPlaces');
-  ok(await page.$eval('#dbody', e => e.textContent.includes('捷运站') && !e.textContent.includes('捷運站')), '字典地點跟著字形變簡體');
+  const simpChk = await page.evaluate(() => {
+    const t = document.querySelector('#dbody').textContent, ps = curPlaces();
+    return { all: ps.every(p => t.includes(p.zs)), noTrad: ps.every(p => p.zs === p.zh || !t.includes(p.zh)), n: ps.length };
+  });
+  ok(simpChk.n === 4 && simpChk.all && simpChk.noTrad, '字典地點跟著字形變簡體（棋盤上的 4 個都是簡體字）');
   await page.click('#dClose');
+  // 換困難：字典跟著列 8 個；每一局重新抽，字典也跟著換
+  await openSet(page);
+  await opt(page, 'mode', 'hard');
+  await closeSet(page);
+  const hardBoard = await cellNames(page);
+  await page.click('#bDict');
+  await page.click('#tPlaces');
+  const hardDict = await page.$$eval('#dbody .row .nm', els => els.map(e => e.textContent.trim()));
+  ok(hardDict.length === 8 && JSON.stringify([...hardDict].sort()) === JSON.stringify([...hardBoard].sort()), '困難：字典列 8 筆，就是棋盤上的 8 個地點');
+  await page.click('#dClose');
+  const rounds = await page.evaluate(() => {
+    const dicts = [];
+    for (let i = 0; i < 6; i++) { newGame(); dicts.push(curPlaces().map(p => p.id).join(',')); }
+    return { ok: dicts.every(d => d.split(',').length === 8), distinct: new Set(dicts).size };
+  });
+  ok(rounds.ok && rounds.distinct > 1, '每局重新抽地點，字典跟著這一局的地點（連抽 6 局不是同一組）');
+  await page.context().close();
+
+  // ===== 9b. 地點庫（50 個）=====
+  console.log('== 地點庫 50 個 ==');
+  page = await fresh();
+  const pool = await page.evaluate(() => {
+    const P = PLACES, art = /^(el|la) /, indf = /^(un|una) /;
+    const icons = P.map(p => ICON[p.id] || '');
+    const seen = new Set();
+    let perRoundOk = true;
+    for (let i = 0; i < 300; i++) { newGame(); const ids = curPlaces().map(p => p.id); if (new Set(ids).size !== ids.length || ids.length !== 4) perRoundOk = false; ids.forEach(x => seen.add(x)); }
+    return {
+      n: P.length,
+      filled: P.every(p => ['zh','zs','py','zy','es','esi','en','eni'].every(k => p[k] && p[k].trim())),
+      // 西文：定冠詞 el/la、不定冠詞 un/una；名稱要一致（「la estación del metro」的 del 是文法縮寫，所以拿掉 de/del 再比）
+      es: P.every(p => art.test(p.es) && indf.test(p.esi) && p.es.replace(art, '').replace(/ del? /, ' ') === p.esi.replace(indf, '').replace(/ del? /, ' ')),
+      en: P.every(p => p.en.startsWith('the ') && /^an? /.test(p.eni) && p.en.slice(4) === p.eni.replace(/^an? /, '')),
+      svgs: icons.every(s => s.startsWith('<svg') && s.endsWith('</svg>')),
+      distinctIcons: new Set(icons).size,
+      perRoundOk, seen: seen.size
+    };
+  });
+  ok(pool.n === 50 && pool.filled, '50 個地點，繁簡、拼音、注音、西文、英文欄位都有填');
+  ok(pool.es && pool.en, '西文 el/la、un/una 與英文 the、a/an 成對，名稱一致');
+  ok(pool.svgs && pool.distinctIcons === 50, '50 個地點都有圖片，而且 50 張各不相同');
+  ok(pool.perRoundOk, '連抽 300 局：每局 4 個地點、不重複');
+  ok(pool.seen >= 45, '連抽 300 局：50 個地點幾乎都有出現過（' + pool.seen + ' 個），不只是原本的 12 個');
+  // 名稱最長的 8 個地點同時上棋盤（困難＋拼音注音兩行）：格子不能被撐破、頁面不能橫向捲動
+  await openSet(page); await opt(page, 'mode', 'hard'); await opt(page, 'phon', 'both'); await closeSet(page);
+  const lay = await page.evaluate(() => {
+    const ids = ['mkt', 'dent', 'dept', 'cvs', 'train', 'glasses', 'brk', 'kinder'];
+    st.cells = Array(8).fill(null);
+    allowedCells().forEach((c, i) => st.cells[c] = PLACES.find(p => p.id === ids[i]));
+    update();
+    const cells = [...document.querySelectorAll('.cell:not(.empty)')];
+    return { n: cells.length, over: cells.filter(c => c.scrollWidth > c.clientWidth + 1).length, page: document.documentElement.scrollWidth > window.innerWidth };
+  });
+  ok(lay.n === 8 && lay.over === 0 && !lay.page, '8 個名稱最長的地點同時上棋盤：格子沒被撐破、頁面不橫向捲動');
   await page.context().close();
 
   // ===== 讀音：以 GoodTeacher 規則＋共用轉換器核對過的結果，凍結在這裡 =====
@@ -645,7 +706,23 @@ async function fullGame(page, mode) {
     cafe:['kāfēitīng','ㄎㄚ ㄈㄟ ㄊㄧㄥ'], lib:['túshūguǎn','ㄊㄨˊ ㄕㄨ ㄍㄨㄢˇ'], bank:['yínháng','ㄧㄣˊ ㄏㄤˊ'],
     post:['yóujú','ㄧㄡˊ ㄐㄩˊ'], cvs:['biànlì shāngdiàn','ㄅㄧㄢˋ ㄌㄧˋ ㄕㄤ ㄉㄧㄢˋ'], hosp:['yīyuàn','ㄧ ㄩㄢˋ'],
     school:['xuéxiào','ㄒㄩㄝˊ ㄒㄧㄠˋ'], night:['yèshì','ㄧㄝˋ ㄕˋ'], mrt:['jiéyùnzhàn','ㄐㄧㄝˊ ㄩㄣˋ ㄓㄢˋ'],
-    pharm:['yàojú','ㄧㄠˋ ㄐㄩˊ'], park:['gōngyuán','ㄍㄨㄥ ㄩㄢˊ'], mart:['chāoshì','ㄔㄠ ㄕˋ'] };
+    pharm:['yàojú','ㄧㄠˋ ㄐㄩˊ'], park:['gōngyuán','ㄍㄨㄥ ㄩㄢˊ'], mart:['chāoshì','ㄔㄠ ㄕˋ'],
+    train:['huǒchēzhàn','ㄏㄨㄛˇ ㄔㄜ ㄓㄢˋ'], bus:['gōngchēzhàn','ㄍㄨㄥ ㄔㄜ ㄓㄢˋ'], air:['jīchǎng','ㄐㄧ ㄔㄤˇ'],
+    gas:['jiāyóuzhàn','ㄐㄧㄚ ㄧㄡˊ ㄓㄢˋ'], lot:['tíngchēchǎng','ㄊㄧㄥˊ ㄔㄜ ㄔㄤˇ'],
+    rest:['cāntīng','ㄘㄢ ㄊㄧㄥ'], brk:['zǎocāndiàn','ㄗㄠˇ ㄘㄢ ㄉㄧㄢˋ'], bake:['miànbāodiàn','ㄇㄧㄢˋ ㄅㄠ ㄉㄧㄢˋ'],
+    drink:['yǐnliàodiàn','ㄧㄣˇ ㄌㄧㄠˋ ㄉㄧㄢˋ'], noodle:['miàndiàn','ㄇㄧㄢˋ ㄉㄧㄢˋ'], fruit:['shuǐguǒtān','ㄕㄨㄟˇ ㄍㄨㄛˇ ㄊㄢ'],
+    mkt:['chuántǒng shìchǎng','ㄔㄨㄢˊ ㄊㄨㄥˇ ㄕˋ ㄔㄤˇ'],
+    dept:['bǎihuò gōngsī','ㄅㄞˇ ㄏㄨㄛˋ ㄍㄨㄥ ㄙ'], book:['shūdiàn','ㄕㄨ ㄉㄧㄢˋ'], flower:['huādiàn','ㄏㄨㄚ ㄉㄧㄢˋ'],
+    glasses:['yǎnjìngháng','ㄧㄢˇ ㄐㄧㄥˋ ㄏㄤˊ'], phone:['shǒujīháng','ㄕㄡˇ ㄐㄧ ㄏㄤˊ'], hair:['lǐfàdiàn','ㄌㄧˇ ㄈㄚˋ ㄉㄧㄢˋ'],
+    laundry:['xǐyīdiàn','ㄒㄧˇ ㄧ ㄉㄧㄢˋ'], police:['jǐngchájú','ㄐㄧㄥˇ ㄔㄚˊ ㄐㄩˊ'], fire:['xiāofángjú','ㄒㄧㄠ ㄈㄤˊ ㄐㄩˊ'],
+    dist:['qūgōngsuǒ','ㄑㄩ ㄍㄨㄥ ㄙㄨㄛˇ'],
+    clinic:['zhěnsuǒ','ㄓㄣˇ ㄙㄨㄛˇ'], dent:['yáyī zhěnsuǒ','ㄧㄚˊ ㄧ ㄓㄣˇ ㄙㄨㄛˇ'],
+    kinder:["yòu'éryuán",'ㄧㄡˋ ㄦˊ ㄩㄢˊ'], univ:['dàxué','ㄉㄚˋ ㄒㄩㄝˊ'],
+    cinema:['diànyǐngyuàn','ㄉㄧㄢˋ ㄧㄥˇ ㄩㄢˋ'], gym:['jiànshēnfáng','ㄐㄧㄢˋ ㄕㄣ ㄈㄤˊ'], pool:['yóuyǒngchí','ㄧㄡˊ ㄩㄥˇ ㄔˊ'],
+    zoo:['dòngwùyuán','ㄉㄨㄥˋ ㄨˋ ㄩㄢˊ'], museum:['bówùguǎn','ㄅㄛˊ ㄨˋ ㄍㄨㄢˇ'], amuse:['yóulèyuán','ㄧㄡˊ ㄌㄜˋ ㄩㄢˊ'],
+    court:['lánqiúchǎng','ㄌㄢˊ ㄑㄧㄡˊ ㄔㄤˇ'],
+    temple:['miào','ㄇㄧㄠˋ'], church:['jiàotáng','ㄐㄧㄠˋ ㄊㄤˊ'], beach:['hǎibiān','ㄏㄞˇ ㄅㄧㄢ'], mount:['shān','ㄕㄢ'],
+    hotel:['fàndiàn','ㄈㄢˋ ㄉㄧㄢˋ'] };
   const FROZEN_DIRS = [
     ['qiánmiàn','ㄑㄧㄢˊ ㄇㄧㄢˋ'], ['yòu qiánfāng','ㄧㄡˋ ㄑㄧㄢˊ ㄈㄤ'], ['yòubiān','ㄧㄡˋ ㄅㄧㄢ'],
     ['yòu hòufāng','ㄧㄡˋ ㄏㄡˋ ㄈㄤ'], ['hòumiàn','ㄏㄡˋ ㄇㄧㄢˋ'], ['zuǒ hòufāng','ㄗㄨㄛˇ ㄏㄡˋ ㄈㄤ'],
@@ -653,7 +730,8 @@ async function fullGame(page, mode) {
   const FROZEN_ALT = { 0:['zhèng qiánfāng','ㄓㄥˋ ㄑㄧㄢˊ ㄈㄤ'], 2:['yòushǒubiān','ㄧㄡˋ ㄕㄡˇ ㄅㄧㄢ'], 4:['zhèng hòufāng','ㄓㄥˋ ㄏㄡˋ ㄈㄤ'], 6:['zuǒshǒubiān','ㄗㄨㄛˇ ㄕㄡˇ ㄅㄧㄢ'] };
   const FROZEN_W = { zai:['zài','ㄗㄞˋ'], wo:['wǒ','ㄨㄛˇ'], de:['de','˙ㄉㄜ'], you:['yǒu','ㄧㄡˇ'], nali:['nǎlǐ','ㄋㄚˇ ㄌㄧˇ'], shme:['shénme','ㄕㄣˊ ˙ㄇㄜ'] };
   const data = await page.evaluate(() => ({ P: PLACES, D: DIRS, W }));
-  ok(data.P.every(p => JSON.stringify([p.py, p.zy]) === JSON.stringify(FROZEN_PLACES[p.id])), '12 個地點的拼音與注音和核對結果一致');
+  ok(data.P.every(p => JSON.stringify([p.py, p.zy]) === JSON.stringify(FROZEN_PLACES[p.id])), '50 個地點的拼音與注音和核對結果一致');
+  ok(data.P.length === 50 && Object.keys(FROZEN_PLACES).length === 50 && new Set(data.P.map(p => p.id)).size === 50, '地點庫共 50 個，代號不重複，核對表也是 50 個');
   ok(data.D.every((d, i) => d.py === FROZEN_DIRS[i][0] && d.zy === FROZEN_DIRS[i][1]), '8 個方位詞的拼音與注音和核對結果一致');
   ok(data.D.every((d, i) => FROZEN_ALT[i] ? (d.alt && d.alt.py === FROZEN_ALT[i][0] && d.alt.zy === FROZEN_ALT[i][1]) : !d.alt), '正前方／右手邊／正後方／左手邊 的拼音與注音一致，斜角方位沒有第二種說法');
   ok(Object.keys(FROZEN_W).every(k => data.W[k].py === FROZEN_W[k][0] && data.W[k].zy === FROZEN_W[k][1]), '在／我／的／有／哪裡／什麼 的拼音與注音一致');

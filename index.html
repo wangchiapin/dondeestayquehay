@@ -325,7 +325,53 @@ const PLACES=[
   {id:'mrt',zh:'捷運站',zs:'捷运站',py:'jiéyùnzhàn',zy:'ㄐㄧㄝˊ ㄩㄣˋ ㄓㄢˋ',es:'la estación del metro',esi:'una estación de metro',en:'the MRT station',eni:'an MRT station'},
   {id:'pharm',zh:'藥局',zs:'药局',py:'yàojú',zy:'ㄧㄠˋ ㄐㄩˊ',es:'la farmacia',esi:'una farmacia',en:'the pharmacy',eni:'a pharmacy'},
   {id:'park',zh:'公園',zs:'公园',py:'gōngyuán',zy:'ㄍㄨㄥ ㄩㄢˊ',es:'el parque',esi:'un parque',en:'the park',eni:'a park'},
-  {id:'mart',zh:'超市',zs:'超市',py:'chāoshì',zy:'ㄔㄠ ㄕˋ',es:'el supermercado',esi:'un supermercado',en:'the supermarket',eni:'a supermarket'}
+  {id:'mart',zh:'超市',zs:'超市',py:'chāoshì',zy:'ㄔㄠ ㄕˋ',es:'el supermercado',esi:'un supermercado',en:'the supermarket',eni:'a supermarket'},
+  /* —— 交通 —— */
+  {id:'train',zh:'火車站',zs:'火车站',py:'huǒchēzhàn',zy:'ㄏㄨㄛˇ ㄔㄜ ㄓㄢˋ',es:'la estación de tren',esi:'una estación de tren',en:'the train station',eni:'a train station'},
+  {id:'bus',zh:'公車站',zs:'公车站',py:'gōngchēzhàn',zy:'ㄍㄨㄥ ㄔㄜ ㄓㄢˋ',es:'la parada de autobús',esi:'una parada de autobús',en:'the bus stop',eni:'a bus stop'},
+  {id:'air',zh:'機場',zs:'机场',py:'jīchǎng',zy:'ㄐㄧ ㄔㄤˇ',es:'el aeropuerto',esi:'un aeropuerto',en:'the airport',eni:'an airport'},
+  {id:'gas',zh:'加油站',zs:'加油站',py:'jiāyóuzhàn',zy:'ㄐㄧㄚ ㄧㄡˊ ㄓㄢˋ',es:'la gasolinera',esi:'una gasolinera',en:'the gas station',eni:'a gas station'},
+  {id:'lot',zh:'停車場',zs:'停车场',py:'tíngchēchǎng',zy:'ㄊㄧㄥˊ ㄔㄜ ㄔㄤˇ',es:'el estacionamiento',esi:'un estacionamiento',en:'the parking lot',eni:'a parking lot'},
+  /* —— 吃喝 —— */
+  {id:'rest',zh:'餐廳',zs:'餐厅',py:'cāntīng',zy:'ㄘㄢ ㄊㄧㄥ',es:'el restaurante',esi:'un restaurante',en:'the restaurant',eni:'a restaurant'},
+  {id:'brk',zh:'早餐店',zs:'早餐店',py:'zǎocāndiàn',zy:'ㄗㄠˇ ㄘㄢ ㄉㄧㄢˋ',es:'la tienda de desayunos',esi:'una tienda de desayunos',en:'the breakfast shop',eni:'a breakfast shop'},
+  {id:'bake',zh:'麵包店',zs:'面包店',py:'miànbāodiàn',zy:'ㄇㄧㄢˋ ㄅㄠ ㄉㄧㄢˋ',es:'la panadería',esi:'una panadería',en:'the bakery',eni:'a bakery'},
+  {id:'drink',zh:'飲料店',zs:'饮料店',py:'yǐnliàodiàn',zy:'ㄧㄣˇ ㄌㄧㄠˋ ㄉㄧㄢˋ',es:'la tienda de bebidas',esi:'una tienda de bebidas',en:'the drink shop',eni:'a drink shop'},
+  {id:'noodle',zh:'麵店',zs:'面店',py:'miàndiàn',zy:'ㄇㄧㄢˋ ㄉㄧㄢˋ',es:'la tienda de fideos',esi:'una tienda de fideos',en:'the noodle shop',eni:'a noodle shop'},
+  {id:'fruit',zh:'水果攤',zs:'水果摊',py:'shuǐguǒtān',zy:'ㄕㄨㄟˇ ㄍㄨㄛˇ ㄊㄢ',es:'el puesto de frutas',esi:'un puesto de frutas',en:'the fruit stand',eni:'a fruit stand'},
+  {id:'mkt',zh:'傳統市場',zs:'传统市场',py:'chuántǒng shìchǎng',zy:'ㄔㄨㄢˊ ㄊㄨㄥˇ ㄕˋ ㄔㄤˇ',es:'el mercado tradicional',esi:'un mercado tradicional',en:'the traditional market',eni:'a traditional market'},
+  /* —— 購物 —— */
+  {id:'dept',zh:'百貨公司',zs:'百货公司',py:'bǎihuò gōngsī',zy:'ㄅㄞˇ ㄏㄨㄛˋ ㄍㄨㄥ ㄙ',es:'el centro comercial',esi:'un centro comercial',en:'the shopping mall',eni:'a shopping mall'},
+  {id:'book',zh:'書店',zs:'书店',py:'shūdiàn',zy:'ㄕㄨ ㄉㄧㄢˋ',es:'la librería',esi:'una librería',en:'the bookstore',eni:'a bookstore'},
+  {id:'flower',zh:'花店',zs:'花店',py:'huādiàn',zy:'ㄏㄨㄚ ㄉㄧㄢˋ',es:'la floristería',esi:'una floristería',en:'the flower shop',eni:'a flower shop'},
+  {id:'glasses',zh:'眼鏡行',zs:'眼镜行',py:'yǎnjìngháng',zy:'ㄧㄢˇ ㄐㄧㄥˋ ㄏㄤˊ',es:'la óptica',esi:'una óptica',en:'the eyeglass shop',eni:'an eyeglass shop'},
+  {id:'phone',zh:'手機行',zs:'手机行',py:'shǒujīháng',zy:'ㄕㄡˇ ㄐㄧ ㄏㄤˊ',es:'la tienda de celulares',esi:'una tienda de celulares',en:'the phone shop',eni:'a phone shop'},
+  {id:'hair',zh:'理髮店',zs:'理发店',py:'lǐfàdiàn',zy:'ㄌㄧˇ ㄈㄚˋ ㄉㄧㄢˋ',es:'la peluquería',esi:'una peluquería',en:'the hair salon',eni:'a hair salon'},
+  /* —— 生活服務 —— */
+  {id:'laundry',zh:'洗衣店',zs:'洗衣店',py:'xǐyīdiàn',zy:'ㄒㄧˇ ㄧ ㄉㄧㄢˋ',es:'la lavandería',esi:'una lavandería',en:'the laundromat',eni:'a laundromat'},
+  {id:'police',zh:'警察局',zs:'警察局',py:'jǐngchájú',zy:'ㄐㄧㄥˇ ㄔㄚˊ ㄐㄩˊ',es:'la estación de policía',esi:'una estación de policía',en:'the police station',eni:'a police station'},
+  {id:'fire',zh:'消防局',zs:'消防局',py:'xiāofángjú',zy:'ㄒㄧㄠ ㄈㄤˊ ㄐㄩˊ',es:'la estación de bomberos',esi:'una estación de bomberos',en:'the fire station',eni:'a fire station'},
+  {id:'dist',zh:'區公所',zs:'区公所',py:'qūgōngsuǒ',zy:'ㄑㄩ ㄍㄨㄥ ㄙㄨㄛˇ',es:'la oficina del distrito',esi:'una oficina del distrito',en:'the district office',eni:'a district office'},
+  /* —— 看病 —— */
+  {id:'clinic',zh:'診所',zs:'诊所',py:'zhěnsuǒ',zy:'ㄓㄣˇ ㄙㄨㄛˇ',es:'la clínica',esi:'una clínica',en:'the clinic',eni:'a clinic'},
+  {id:'dent',zh:'牙醫診所',zs:'牙医诊所',py:'yáyī zhěnsuǒ',zy:'ㄧㄚˊ ㄧ ㄓㄣˇ ㄙㄨㄛˇ',es:'el consultorio dental',esi:'un consultorio dental',en:'the dental clinic',eni:'a dental clinic'},
+  /* —— 學習 —— */
+  {id:'kinder',zh:'幼兒園',zs:'幼儿园',py:'yòu\'éryuán',zy:'ㄧㄡˋ ㄦˊ ㄩㄢˊ',es:'el jardín de infancia',esi:'un jardín de infancia',en:'the kindergarten',eni:'a kindergarten'},
+  {id:'univ',zh:'大學',zs:'大学',py:'dàxué',zy:'ㄉㄚˋ ㄒㄩㄝˊ',es:'la universidad',esi:'una universidad',en:'the university',eni:'a university'},
+  /* —— 休閒 —— */
+  {id:'cinema',zh:'電影院',zs:'电影院',py:'diànyǐngyuàn',zy:'ㄉㄧㄢˋ ㄧㄥˇ ㄩㄢˋ',es:'el cine',esi:'un cine',en:'the movie theater',eni:'a movie theater'},
+  {id:'gym',zh:'健身房',zs:'健身房',py:'jiànshēnfáng',zy:'ㄐㄧㄢˋ ㄕㄣ ㄈㄤˊ',es:'el gimnasio',esi:'un gimnasio',en:'the gym',eni:'a gym'},
+  {id:'pool',zh:'游泳池',zs:'游泳池',py:'yóuyǒngchí',zy:'ㄧㄡˊ ㄩㄥˇ ㄔˊ',es:'la piscina',esi:'una piscina',en:'the swimming pool',eni:'a swimming pool'},
+  {id:'zoo',zh:'動物園',zs:'动物园',py:'dòngwùyuán',zy:'ㄉㄨㄥˋ ㄨˋ ㄩㄢˊ',es:'el zoológico',esi:'un zoológico',en:'the zoo',eni:'a zoo'},
+  {id:'museum',zh:'博物館',zs:'博物馆',py:'bówùguǎn',zy:'ㄅㄛˊ ㄨˋ ㄍㄨㄢˇ',es:'el museo',esi:'un museo',en:'the museum',eni:'a museum'},
+  {id:'amuse',zh:'遊樂園',zs:'游乐园',py:'yóulèyuán',zy:'ㄧㄡˊ ㄌㄜˋ ㄩㄢˊ',es:'el parque de diversiones',esi:'un parque de diversiones',en:'the amusement park',eni:'an amusement park'},
+  {id:'court',zh:'籃球場',zs:'篮球场',py:'lánqiúchǎng',zy:'ㄌㄢˊ ㄑㄧㄡˊ ㄔㄤˇ',es:'la cancha de baloncesto',esi:'una cancha de baloncesto',en:'the basketball court',eni:'a basketball court'},
+  /* —— 景點與住宿 —— */
+  {id:'temple',zh:'廟',zs:'庙',py:'miào',zy:'ㄇㄧㄠˋ',es:'el templo',esi:'un templo',en:'the temple',eni:'a temple'},
+  {id:'church',zh:'教堂',zs:'教堂',py:'jiàotáng',zy:'ㄐㄧㄠˋ ㄊㄤˊ',es:'la iglesia',esi:'una iglesia',en:'the church',eni:'a church'},
+  {id:'beach',zh:'海邊',zs:'海边',py:'hǎibiān',zy:'ㄏㄞˇ ㄅㄧㄢ',es:'la playa',esi:'una playa',en:'the beach',eni:'a beach'},
+  {id:'mount',zh:'山',zs:'山',py:'shān',zy:'ㄕㄢ',es:'la montaña',esi:'una montaña',en:'the mountain',eni:'a mountain'},
+  {id:'hotel',zh:'飯店',zs:'饭店',py:'fàndiàn',zy:'ㄈㄢˋ ㄉㄧㄢˋ',es:'el hotel',esi:'un hotel',en:'the hotel',eni:'a hotel'}
 ];
 // 相對角色的方位，依順時針：0 前 → 7 左前
 const DIRS=[
@@ -363,7 +409,53 @@ night:svg(GR+`<rect x="10" y="40" width="44" height="16" fill="${cT}"/><path d="
 mrt:svg(GR+`<rect x="14" y="8" width="36" height="40" rx="8" fill="${cBL}"/><rect x="19" y="14" width="26" height="16" rx="3" fill="${cW}"/><path d="M32 14v16"/><circle cx="22" cy="39" r="3" fill="${cW}"/><circle cx="42" cy="39" r="3" fill="${cW}"/><path d="M20 48l-6 8M44 48l6 8M26 52h12"/>`),
 pharm:svg(GR+`<rect x="8" y="24" width="48" height="32" fill="${cB}"/><rect x="8" y="14" width="48" height="10" fill="${cG}"/><path d="M32 16v6M29 19h6" stroke="${cW}" stroke-width="2.5"/><rect x="12" y="32" width="24" height="16" fill="${cW}"/><g transform="rotate(-30 24 40)"><rect x="16" y="36" width="16" height="8" rx="4" fill="${cT}"/><path d="M24 36v8"/></g><rect x="42" y="32" width="10" height="24" fill="${cT}"/>`),
 park:svg(GR+`<rect x="14" y="36" width="5" height="20" fill="${cT}"/><circle cx="16.5" cy="26" r="12" fill="${cG}"/><rect x="44" y="40" width="4" height="16" fill="${cT}"/><circle cx="46" cy="32" r="9" fill="${cG}"/><path d="M26 46h14M26 50h14M28 50v6M38 50v6"/>`),
-mart:svg(GR+`<path d="M16 20H56L50 40H22Z" fill="${cB}"/><path d="M6 12H13L22 40"/><path d="M28 20L30 40M38 20V40M48 20L46 40"/><circle cx="26" cy="48" r="4" fill="${cT}"/><circle cx="46" cy="48" r="4" fill="${cT}"/><rect x="24" y="10" width="10" height="10" fill="${cG}"/><circle cx="44" cy="15" r="5" fill="${cR}"/>`)
+mart:svg(GR+`<path d="M16 20H56L50 40H22Z" fill="${cB}"/><path d="M6 12H13L22 40"/><path d="M28 20L30 40M38 20V40M48 20L46 40"/><circle cx="26" cy="48" r="4" fill="${cT}"/><circle cx="46" cy="48" r="4" fill="${cT}"/><rect x="24" y="10" width="10" height="10" fill="${cG}"/><circle cx="44" cy="15" r="5" fill="${cR}"/>`),
+/* —— 交通 —— */
+train:svg(GR+`<path d="M2 60H62M8 58v4M20 58v4M32 58v4M44 58v4M56 58v4" stroke-width="1.4"/><rect x="8" y="26" width="30" height="20" rx="3" fill="${cT}"/><rect x="38" y="16" width="16" height="30" fill="${cB}"/><rect x="42" y="21" width="8" height="8" fill="${cW}"/><rect x="11" y="16" width="9" height="10" fill="${cB}"/><path d="M9 16h13"/><circle cx="16" cy="9" r="3" fill="${cW}"/><circle cx="23" cy="5" r="2.5" fill="${cW}"/><path d="M8 36H38" stroke="${cR}" stroke-width="3"/><circle cx="18" cy="48" r="6" fill="${cW}"/><circle cx="33" cy="48" r="6" fill="${cW}"/><circle cx="47" cy="48" r="6" fill="${cW}"/><circle cx="18" cy="48" r="1.2"/><circle cx="33" cy="48" r="1.2"/><circle cx="47" cy="48" r="1.2"/>`),
+bus:svg(GR+`<rect x="4" y="20" width="44" height="30" rx="5" fill="${cG}"/><rect x="8" y="25" width="10" height="9" fill="${cW}"/><rect x="21" y="25" width="10" height="9" fill="${cW}"/><rect x="34" y="25" width="10" height="9" fill="${cW}"/><path d="M4 40H48"/><circle cx="15" cy="50" r="5" fill="${cW}"/><circle cx="37" cy="50" r="5" fill="${cW}"/><path d="M56 56V10"/><rect x="50" y="4" width="12" height="9" rx="2" fill="${cR}"/>`),
+air:svg(`<g transform="rotate(45 32 32)"><path d="M32 6c3 0 5 3 5 8v12l19 12v6L37 34v12l6 5v5l-11-3-11 3v-5l6-5V34L8 44v-6l19-12V14c0-5 2-8 5-8z" fill="${cW}"/></g><path d="M6 54h10M12 60h14" stroke="${cBL}" stroke-width="2.5"/>`),
+gas:svg(GR+`<rect x="12" y="10" width="26" height="46" rx="3" fill="${cB}"/><rect x="16" y="15" width="18" height="12" rx="2" fill="${cW}"/><rect x="12" y="34" width="26" height="6" fill="${cR}"/><path d="M38 22h5a3 3 0 0 1 3 3v21a4 4 0 0 0 8 0V30l-4-5"/><path d="M50 25l3-3"/>`),
+lot:svg(GR+`<rect x="12" y="6" width="40" height="40" rx="6" fill="${cBL}"/><path d="M26 38V15h9a6.5 6.5 0 0 1 0 13h-9" stroke="${cW}" stroke-width="3.5"/><path d="M32 46v10"/>`),
+/* —— 吃喝 —— */
+rest:svg(`<circle cx="32" cy="32" r="15" fill="${cW}"/><circle cx="32" cy="32" r="9" fill="${cB}"/><path d="M8 10v12a4 4 0 0 0 8 0V10M12 10v12M12 26v28"/><path d="M55 10c-5 4-6 12-6 20h6z" fill="${cG}"/><path d="M55 30v24"/>`),
+brk:svg(`<path d="M10 54V30a9 9 0 0 1 3-17h18a9 9 0 0 1 3 17v24z" fill="${cT}"/><path d="M15 50V31a5 5 0 0 1 2-9h10a5 5 0 0 1 2 9v19z" fill="${cB}" stroke-width="1.4"/><path d="M28 42c-3-7 4-13 13-11 9 0 16 5 13 14-3 8-13 11-20 5z" fill="${cW}"/><circle cx="42" cy="40" r="5.5" fill="#f0d98a"/>`),
+bake:svg(GR+`<path d="M6 56c-2-14 6-26 26-26s28 12 26 26z" fill="${cT}"/><path d="M18 40l5 10M30 36l5 14M42 40l5 10" stroke="${cB}" stroke-width="3"/>`),
+drink:svg(`<path d="M36 4L32 26" stroke-width="3.5"/><path d="M16 26a16 8 0 0 1 32 0z" fill="${cB}"/><path d="M17 26h30l-4 30H21z" fill="${cW}"/><path d="M18.6 38h26.8L43 56H21z" fill="${cT}"/><circle cx="26" cy="51" r="2.3" fill="#4a4945"/><circle cx="32" cy="48" r="2.3" fill="#4a4945"/><circle cx="38" cy="51" r="2.3" fill="#4a4945"/><circle cx="29" cy="44" r="2.3" fill="#4a4945"/><circle cx="36" cy="43" r="2.3" fill="#4a4945"/>`),
+noodle:svg(`<path d="M42 4L28 30M48 6L34 30" stroke-width="2.5"/><path d="M12 30c3-5 6 0 10-3s7 2 11-1 7 1 11-1" stroke="${cT}" stroke-width="3"/><path d="M8 32h48a24 22 0 0 1-48 0z" fill="${cW}"/><path d="M12 40h40" stroke="${cR}" stroke-width="2.5"/><path d="M24 54h16"/><path d="M16 12q-3 4 0 8q3 4 0 8" stroke-width="1.5"/>`),
+fruit:svg(GR+`<path d="M8 22L12 8H52L56 22z" fill="${cR}"/><path d="M22 8L20 22M32 8V22M42 8L44 22" stroke="${cW}" stroke-width="2.2"/><path d="M12 22V56M52 22V56"/><rect x="10" y="42" width="44" height="14" fill="${cT}"/><circle cx="20" cy="36" r="5.5" fill="${cR}"/><circle cx="32" cy="36" r="5.5" fill="${cG}"/><circle cx="44" cy="36" r="5.5" fill="#f0d98a"/>`),
+mkt:svg(GR+`<path d="M18 30a14 16 0 0 1 28 0"/><path d="M22 32c-3-8 1-14 6-18 1 6 0 12-2 18z" fill="${cG}"/><path d="M36 32l6-16 4 2-4 14z" fill="#e09a4a"/><path d="M10 32h44l-5 24H15z" fill="${cT}"/><path d="M13 40h38M16 48h32M24 32l-2 24M32 32v24M40 32l2 24" stroke-width="1.3"/>`),
+/* —— 購物 —— */
+dept:svg(GR+`<rect x="8" y="12" width="36" height="44" fill="${cB}"/><rect x="16" y="5" width="20" height="7" fill="${cR}"/><g fill="${cW}"><rect x="12" y="17" width="8" height="8"/><rect x="24" y="17" width="8" height="8"/><rect x="36" y="17" width="6" height="8"/><rect x="12" y="29" width="8" height="8"/><rect x="24" y="29" width="8" height="8"/></g><rect x="19" y="42" width="14" height="14" fill="${cW}"/><rect x="40" y="36" width="18" height="20" fill="${cR}"/><path d="M45 36v-4a4 4 0 0 1 8 0v4"/>`),
+book:svg(GR+`<rect x="8" y="44" width="48" height="12" fill="${cT}"/><path d="M14 44v12M50 44v12"/><rect x="12" y="32" width="42" height="12" fill="${cG}"/><path d="M18 32v12"/><rect x="10" y="20" width="44" height="12" fill="${cR}"/><path d="M42 20v12M46 20v12"/>`),
+flower:svg(`<path d="M32 34V47"/><path d="M32 44c-9 0-12-6-12-10 7 0 12 4 12 10z" fill="${cG}"/><path d="M32 42c8 0 11-5 11-9-7 0-11 4-11 9z" fill="${cG}"/><circle cx="32" cy="10" r="6.5" fill="${cR}"/><circle cx="43.4" cy="18.3" r="6.5" fill="${cR}"/><circle cx="39" cy="32" r="6.5" fill="${cR}"/><circle cx="25" cy="32" r="6.5" fill="${cR}"/><circle cx="20.6" cy="18.3" r="6.5" fill="${cR}"/><circle cx="32" cy="23" r="5.5" fill="#f0d98a"/><path d="M22 47h20l-3 10H25z" fill="${cT}"/>`),
+glasses:svg(`<circle cx="18" cy="34" r="11" fill="${cBL}"/><circle cx="46" cy="34" r="11" fill="${cBL}"/><path d="M29 32a3 3 0 0 1 6 0"/><path d="M7 31L3 24M57 31l4-7"/><path d="M12 31a7 7 0 0 1 5-4M40 31a7 7 0 0 1 5-4" stroke="${cW}" stroke-width="2"/>`),
+phone:svg(`<rect x="19" y="4" width="26" height="52" rx="5" fill="${cB}"/><rect x="22.5" y="11" width="19" height="34" rx="1.5" fill="${cBL}"/><circle cx="32" cy="50.5" r="2" fill="${cW}"/><path d="M29 7.5h6"/><rect x="25.5" y="15" width="5" height="5" rx="1" fill="${cW}"/><rect x="33.5" y="15" width="5" height="5" rx="1" fill="${cW}"/><rect x="25.5" y="23" width="5" height="5" rx="1" fill="${cR}"/><rect x="33.5" y="23" width="5" height="5" rx="1" fill="${cG}"/>`),
+hair:svg(GR+`<circle cx="32" cy="7" r="3.5" fill="${cW}"/><rect x="24" y="14" width="16" height="36" fill="${cW}"/><path d="M24 22L40 14V20L24 28Z" fill="${cR}"/><path d="M24 34L40 26V32L24 40Z" fill="${cBL}"/><path d="M24 46L40 38V44L24 52Z" fill="${cR}"/><rect x="22" y="10" width="20" height="5" rx="2" fill="${cT}"/><rect x="22" y="49" width="20" height="5" rx="2" fill="${cT}"/>`),
+/* —— 生活服務 —— */
+laundry:svg(`<rect x="10" y="6" width="44" height="52" rx="4" fill="${cB}"/><path d="M10 18H54"/><circle cx="18" cy="12" r="2" fill="${cR}"/><circle cx="25" cy="12" r="2" fill="${cG}"/><rect x="38" y="9" width="12" height="6" rx="1" fill="${cW}"/><circle cx="32" cy="38" r="14" fill="${cT}"/><circle cx="32" cy="38" r="9.5" fill="${cBL}"/><path d="M26 36c2-3 5 3 8 0s3 3 5 0" stroke="${cW}" stroke-width="1.5"/>`),
+police:svg(`<path d="M32 5L52 12V30c0 13-9 21-20 26C21 51 12 43 12 30V12z" fill="${cBL}"/><path d="M32 17l3.5 7.5 8 1-6 5.5 1.7 8L32 35l-7.2 4 1.7-8-6-5.5 8-1z" fill="${cW}"/>`),
+fire:svg(GR+`<rect x="4" y="28" width="38" height="20" rx="2" fill="${cR}"/><path d="M42 34h10l6 8v6H42z" fill="${cR}"/><path d="M45 36h6l4 5H45z" fill="${cW}"/><path d="M8 20h30M8 25h30M13 20v5M18 20v5M23 20v5M28 20v5M33 20v5M38 20v5" stroke-width="1.5"/><path d="M4 38H42" stroke="${cW}" stroke-width="2"/><circle cx="14" cy="50" r="5.5" fill="${cW}"/><circle cx="48" cy="50" r="5.5" fill="${cW}"/>`),
+dist:svg(GR+`<path d="M32 3V20"/><path d="M32 3h12v6H32" fill="${cR}"/><rect x="8" y="20" width="48" height="36" fill="${cB}"/><rect x="8" y="20" width="48" height="6" fill="${cT}"/><rect x="26" y="36" width="12" height="20" fill="${cW}"/><path d="M32 36v20"/><rect x="13" y="32" width="9" height="9" fill="${cW}"/><rect x="42" y="32" width="9" height="9" fill="${cW}"/>`),
+/* —— 看病 —— */
+clinic:svg(`<path d="M16 6v14a11 11 0 0 0 22 0V6"/><circle cx="16" cy="6" r="2.5" fill="${cW}"/><circle cx="38" cy="6" r="2.5" fill="${cW}"/><path d="M27 31v8a11 11 0 0 0 22 0v-4"/><circle cx="49" cy="31" r="5" fill="${cT}"/><circle cx="49" cy="31" r="1.8" fill="${cW}"/><path d="M12 42v12M6 48h12" stroke="${cR}" stroke-width="4"/>`),
+dent:svg(`<path d="M32 14C26 8 14 8 14 20C14 30 20 34 20 46C20 54 25 56 26.5 48C28 40 30 36 32 36C34 36 36 40 37.5 48C39 56 44 54 44 46C44 34 50 30 50 20C50 8 38 8 32 14Z" fill="${cW}"/><path d="M22 18c0-3 3-4 5-3" stroke="${cBL}" stroke-width="2.2"/><path d="M52 8l2-4M56 12l4-2M12 8L10 4M8 12L4 10" stroke-width="1.6"/>`),
+/* —— 學習 —— */
+kinder:svg(GR+`<rect x="6" y="36" width="24" height="20" fill="${cR}"/><rect x="34" y="36" width="24" height="20" fill="${cBL}"/><rect x="20" y="14" width="24" height="22" fill="${cG}"/><circle cx="18" cy="46" r="6" fill="${cW}"/><path d="M46 41l6.5 11h-13z" fill="${cW}"/><rect x="27" y="20" width="10" height="10" fill="${cW}"/>`),
+univ:svg(`<path d="M16 30v12c0 5 32 5 32 0V30L32 37z" fill="${cB}"/><path d="M32 10L60 23L32 36L4 23Z" fill="${cT}"/><path d="M54 25v18"/><circle cx="54" cy="46" r="3" fill="${cR}"/><path d="M52 46l-1 8M56 46l1 8" stroke-width="1.5"/>`),
+/* —— 休閒 —— */
+cinema:svg(`<rect x="8" y="26" width="48" height="30" rx="2" fill="${cB}"/><g transform="rotate(-9 8 24)"><rect x="8" y="14" width="48" height="10" fill="${cT}"/><path d="M18 14l-5 10M30 14l-5 10M42 14l-5 10M54 14l-5 10" stroke-width="2"/></g><path d="M27 34v14l13-7z" fill="${cW}"/>`),
+gym:svg(`<path d="M18 32H46" stroke-width="3.5"/><rect x="6" y="20" width="9" height="24" rx="2.5" fill="${cR}"/><rect x="15" y="25" width="6" height="14" rx="1.5" fill="${cT}"/><rect x="49" y="20" width="9" height="24" rx="2.5" fill="${cR}"/><rect x="43" y="25" width="6" height="14" rx="1.5" fill="${cT}"/>`),
+pool:svg(`<path d="M22 46V18a7 7 0 0 1 7-7M36 46V18a7 7 0 0 1 7-7M22 24H36M22 33H36"/><rect x="4" y="38" width="56" height="18" rx="3" fill="${cBL}"/><path d="M8 46q4-4 8 0t8 0t8 0t8 0t8 0t8 0" stroke="${cW}" stroke-width="1.8"/>`),
+zoo:svg(`<ellipse cx="12" cy="30" rx="9" ry="13" fill="#cfcabd"/><ellipse cx="12" cy="30" rx="4.5" ry="8" fill="#e3b3ad" stroke="none"/><ellipse cx="52" cy="30" rx="9" ry="13" fill="#cfcabd"/><ellipse cx="52" cy="30" rx="4.5" ry="8" fill="#e3b3ad" stroke="none"/><path d="M32 38V50c0 6 7 6 7 0" stroke-width="11"/><path d="M32 38V50c0 6 7 6 7 0" stroke="#cfcabd" stroke-width="7"/><circle cx="32" cy="28" r="15" fill="#cfcabd"/><circle cx="26" cy="25" r="1.8" fill="#3b3a36"/><circle cx="38" cy="25" r="1.8" fill="#3b3a36"/>`),
+museum:svg(GR+`<rect x="18" y="52" width="28" height="4" fill="${cB}"/><path d="M17 24c-9 0-9 12 0 12M47 24c9 0 9 12 0 12"/><path d="M26 8h12l-1 8c8 4 11 11 11 19 0 10-7 17-16 17S16 45 16 35c0-8 3-15 11-19z" fill="${cT}"/><path d="M16.5 30h31M16.8 40h30.4" stroke="${cB}" stroke-width="3"/>`),
+amuse:svg(GR+`<path d="M32 28L20 56M32 28L44 56"/><circle cx="32" cy="28" r="18"/><path d="M32 10V46M14 28H50M19.3 15.3L44.7 40.7M44.7 15.3L19.3 40.7" stroke-width="1.4"/><circle cx="32" cy="10" r="3.6" fill="${cR}"/><circle cx="44.7" cy="15.3" r="3.6" fill="${cT}"/><circle cx="50" cy="28" r="3.6" fill="${cG}"/><circle cx="44.7" cy="40.7" r="3.6" fill="${cBL}"/><circle cx="32" cy="46" r="3.6" fill="${cR}"/><circle cx="19.3" cy="40.7" r="3.6" fill="${cT}"/><circle cx="14" cy="28" r="3.6" fill="${cG}"/><circle cx="19.3" cy="15.3" r="3.6" fill="${cBL}"/><circle cx="32" cy="28" r="3" fill="${cW}"/>`),
+court:svg(GR+`<rect x="14" y="6" width="36" height="24" rx="2" fill="${cW}"/><rect x="26" y="14" width="12" height="9" fill="none" stroke-width="1.6"/><path d="M24 30h16" stroke="${cR}" stroke-width="3"/><path d="M26 31l3 12h6l3-12M30 31l1 12M34 31l-1 12" stroke-width="1.3"/><circle cx="46" cy="47" r="8.5" fill="#e0a860"/><path d="M37.5 47h17M46 38.5v17M40 41c3 4 3 9 0 12M52 41c-3 4-3 9 0 12" stroke-width="1.3"/>`),
+/* —— 景點與住宿 —— */
+temple:svg(GR+`<rect x="14" y="32" width="36" height="24" fill="${cB}"/><rect x="26" y="40" width="12" height="16" fill="${cT}"/><path d="M20 32v24M44 32v24" stroke-width="1.5"/><path d="M22 24L26 14C28 12 36 12 38 14L42 24z" fill="${cT}"/><path d="M32 12V6"/><path d="M4 16C10 26 16 24 20 24H44C48 24 54 26 60 16C60 28 52 32 46 32H18C12 32 4 28 4 16Z" fill="${cR}"/>`),
+church:svg(GR+`<path d="M32 3v10M27 8h10"/><path d="M14 30L32 14L50 30z" fill="${cT}"/><rect x="18" y="30" width="28" height="26" fill="${cB}"/><path d="M26 56V44a6 6 0 0 1 12 0v12z" fill="${cT}"/><circle cx="32" cy="35" r="3" fill="${cW}"/>`),
+beach:svg(`<path d="M8 30C8 18 18 10 32 10s24 8 24 20z" fill="${cR}"/><path d="M32 10V30M20 12l4 18M44 12l-4 18" stroke-width="1.4"/><path d="M8 30q6-6 12 0t12 0t12 0t12 0" fill="${cR}"/><path d="M32 30l-4 24"/><path d="M4 56C16 46 42 46 60 56z" fill="${cB}"/><path d="M4 60q5-3 10 0t10 0t10 0t10 0t10 0t10 0" stroke="${cBL}" stroke-width="2.5"/>`),
+mount:svg(GR+`<circle cx="50" cy="14" r="5" fill="#f0d98a"/><path d="M4 56L24 18L38 40L46 28L60 56z" fill="${cG}"/><path d="M24 18L17.7 30L22 27L24.5 30.5L27.5 27L31.6 30z" fill="${cW}"/>`),
+hotel:svg(GR+`<rect x="6" y="14" width="6" height="42" fill="${cT}"/><rect x="54" y="32" width="4" height="24" fill="${cT}"/><rect x="12" y="38" width="42" height="12" fill="${cBL}"/><rect x="14" y="31" width="14" height="8" rx="3" fill="${cW}"/><path d="M32 38v12"/><path d="M46 6l2 4.5 5 .6-3.7 3.4 1 4.9-4.3-2.5-4.3 2.5 1-4.9-3.7-3.4 5-.6z" fill="#f0d98a"/>`)
 };
 
 /* ============ 角色：八隻俯視小動物（頭朝上＝前面），每一題隨機換一隻 ============ */
@@ -504,6 +596,8 @@ const dn=d=>simp()?d.zs:d.zh;
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const allowedCells=()=>G.mode==='easy'?[0,2,4,6]:[0,1,2,3,4,5,6,7];
+// 這一局棋盤上的地點（小字典只列這些；PLACES 是整個地點庫，每局隨機抽 4 或 8 個）
+const curPlaces=()=>(st.cells||[]).filter(Boolean);
 const defN=p=>p[FL()], indN=p=>p[FL()==='es'?'esi':'eni'], dirF=d=>d[FL()];
 
 function stopTimer(){
@@ -688,10 +782,10 @@ function renderDict(){
   $('#tPlaces').textContent=lab('tPlaces');$('#tDirs').textContent=lab('tDirs');$('#tGram').textContent=lab('tGram');$('#dClose').textContent=lab('close');
   ['places','dirs','gram'].forEach(k=>{const b=document.querySelector('[data-tab="'+k+'"]');b.classList.toggle('on',st.dtab===k)});
   const hasF=SETTINGS.lang!=='zh';let h='';
-  if(st.dtab==='places')PLACES.forEach(p=>{h+=dictRow('<i class="ic" data-icon="'+p.id+'">'+ICON[p.id]+'</i>'+pn(p),p,hasF?defN(p):'')});
+  if(st.dtab==='places')curPlaces().forEach(p=>{h+=dictRow('<i class="ic" data-icon="'+p.id+'">'+ICON[p.id]+'</i>'+pn(p),p,hasF?defN(p):'')});
   else if(st.dtab==='dirs')DIRS.forEach(d=>{const a=d.alt;h+=a?dictRow(dn(d)+'／'+(simp()?a.zs:a.zh),{py:d.py+' ／ '+a.py,zy:d.zy+' ／ '+a.zy},hasF?dirF(d):''):dictRow(dn(d),d,hasF?dirF(d):'')});
   else{
-    const p=PLACES[0],d=DIRS[6],a=Object.assign({t:pn(p)+'在我的'+dn(d)+'。',f:cap(defN(p))+(FL()==='es'?' está ':' is ')+dirF(d)+'.'},J(p,W.zai,W.wo,W.de,d));
+    const p=curPlaces()[0]||PLACES[0],d=DIRS[6],a=Object.assign({t:pn(p)+'在我的'+dn(d)+'。',f:cap(defN(p))+(FL()==='es'?' está ':' is ')+dirF(d)+'.'},J(p,W.zai,W.wo,W.de,d));
     const b=Object.assign({t:'我的'+dn(d)+'有'+pn(p)+'。',f:FL()==='es'?cap(dirF(d))+' hay '+indN(p)+'.':'There is '+indN(p)+' '+dirF(d)+'.'},J(W.wo,W.de,d,W.you,p));
     const gr=(head,gl,s)=>'<div class="gr"><b>'+head+'</b>'+(hasF&&gl?'　'+gl:'')+'<br>'+s.t+(phHtml(s)?'<div class="py">'+phHtml(s)+'</div>':'')+(hasF?'<div class="es">'+s.f+'</div>':'')+'</div>';
     const ph1=phHtml(W.zai),ph2=phHtml(W.you);
