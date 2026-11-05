@@ -260,6 +260,20 @@ async function fullGame(page, mode) {
   let s = await stored(page);
   ok(s && s.v === 1 && s.script === 'trad' && s.lang === 'es' && s.phon === 'pinyin' && s.rate === 'normal', '第一次開啟寫入預設共用設定：' + JSON.stringify(s));
   await openSet(page);
+  {
+    // 設定視窗外觀：選中＝咖啡色、不用 ⚙️ 表情符號、手機一屏看完不用滑
+    const v = await page.evaluate(() => {
+      const on = document.querySelector('#setbox .sopt.on'), off = document.querySelector('#setbox .sopt:not(.on)'), box = document.querySelector('#setbox'), d = document.querySelector('#setDone');
+      const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      const tmp = document.createElement('i'); tmp.style.color = acc; document.body.appendChild(tmp); const accRgb = getComputedStyle(tmp).color; tmp.remove();
+      return { onBg: getComputedStyle(on).backgroundColor, accRgb, offBg: getComputedStyle(off).backgroundColor, doneBg: getComputedStyle(d).backgroundColor,
+        h2: document.querySelector('#setbox h2').innerHTML, hasSvg: !!document.querySelector('#setbox h2 svg.gearsv'), sh: box.scrollHeight, ch: box.clientHeight };
+    });
+    ok(v.onBg === v.accRgb && v.doneBg === v.accRgb, '選中的按鈕和「完成」是咖啡色（同主色）');
+    ok(v.offBg !== v.accRgb, '沒選的按鈕不是咖啡色');
+    ok(v.hasSvg && !v.h2.includes('⚙'), '標題用線條齒輪，不用 ⚙️ 表情符號');
+    ok(v.sh <= v.ch + 1, '390×844 手機上設定視窗不用上下滑（' + v.sh + '/' + v.ch + '）');
+  }
   ok(await page.$$eval('#setbox .sopt', e => e.length) === 17, '設定視窗共 17 個選項');
   const keys = await page.$$eval('#setbox .sopt', els => [...new Set(els.map(e => e.dataset.k))]);
   ok(keys.join(',') === 'script,lang,phon,mode,text,timer,hint', '七組設定：' + keys.join(','));
