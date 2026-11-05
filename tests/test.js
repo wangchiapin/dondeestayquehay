@@ -233,7 +233,7 @@ async function fullGame(page, mode) {
     // 預覽標籤與縮圖檔
     const g = await fresh(null, { home: true });
     const meta = await g.evaluate(() => Object.fromEntries([...document.querySelectorAll('meta[property^="og:"],meta[name="twitter:card"]')].map(m => [m.getAttribute('property') || m.getAttribute('name'), m.content])));
-    ok(meta['og:title'] === '方位轉轉轉 · ¡Gira y ubica!', 'og:title：' + meta['og:title']);
+    ok(meta['og:title'] === '方位轉轉轉・¡Gira y ubica!', 'og:title：' + meta['og:title']);
     ok(meta['og:type'] === 'website' && meta['og:site_name'] === '每天一分鐘 · Cada día unos minutos', 'og:type、og:site_name');
     ok(meta['og:description'].includes('轉一圈，找找看！') && meta['og:description'].includes(' · '), 'og:description：' + meta['og:description']);
     ok(meta['og:url'] === 'https://wangchiapin.github.io/dondeestayquehay/', 'og:url');
