@@ -68,6 +68,13 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
 .cell .p{font-size:9px;color:var(--sub);line-height:1.2}
 .cell .h{position:absolute;top:3px;left:0;right:0;font-size:10px;color:var(--accent)}
 .cell.target{outline:3px solid var(--accent)}
+.cell:not(.empty){cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cell.tipon{border-color:var(--accent)}
+.tip{position:absolute;z-index:6;background:#efe4cc;border:1px solid var(--accent);border-radius:10px;padding:6px 12px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.18);min-width:96px;max-width:176px;box-sizing:border-box;pointer-events:none}
+.tip[hidden]{display:none}
+.tip .tn{font-size:17px;font-weight:700}
+.tip .tp{font-size:11px;color:var(--sub);line-height:1.3}
+.tip .tg{font-size:13px;margin-top:3px}
 .center{position:absolute;left:50%;top:50%;width:30%;aspect-ratio:1/1;transform:translate(-50%,-50%);background:transparent;display:flex;align-items:center;justify-content:center}
 #char{width:78%;aspect-ratio:1/1;transition:transform 2s cubic-bezier(.2,.7,.2,1)}
 #char.noanim{transition:none}
@@ -165,6 +172,7 @@ h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap
     <div class="cell" id="cell-5" data-s="5"></div>
     <div class="cell" id="cell-4" data-s="4"></div>
     <div class="cell" id="cell-3" data-s="3"></div>
+    <div class="tip" id="tip" hidden></div>
   </div>
   <div id="tbar"><i></i></div>
   <section id="qbox"><div id="qc"></div><button type="button" id="spin"></button><div id="qf"></div></section>
@@ -645,7 +653,7 @@ function openConfirm(){
 function closeConfirm(){$('#cfm').hidden=true;if(!modalOpen())startTimer()}
 function newGame(){
   st.token++;stopTimer();
-  st.n=0;st.score=0;st.q=null;st.answered=false;st.spinning=false;st.facing=0;st.angle=0;
+  st.n=0;st.score=0;st.q=null;st.answered=false;st.spinning=false;st.facing=0;st.angle=0;st.tip=null;
   const ch=$('#char');ch.classList.add('noanim');ch.style.transform='rotate(0deg)';ch.dataset.facing='0';
   void ch.offsetWidth;ch.classList.remove('noanim');
   setAnimal(pickAnimal(st.animal));
@@ -659,7 +667,7 @@ function spin(){
   if(st.spinning||(st.q&&!st.answered))return;
   const f=pick(allowedCells());
   const delta=((f-st.facing+8)%8)*45;
-  st.angle+=720+delta;st.facing=f;st.q=null;st.answered=false;st.spinning=true;
+  st.angle+=720+delta;st.facing=f;st.q=null;st.answered=false;st.spinning=true;st.tip=null;
   setAnimal(pickAnimal(st.animal));
   const ch=$('#char');ch.style.transform='rotate('+st.angle+'deg)';ch.dataset.facing=String(f);
   const tk=st.token;
@@ -725,7 +733,10 @@ function update(){
       '<div class="img" role="img" aria-label="'+pn(p)+'">'+ICON[p.id]+'</div>'+(G.text?'<div class="n">'+pn(p)+'</div>'+(ph?'<div class="p">'+ph+'</div>':''):'');
     el.dataset.name=pn(p);
     el.dataset.place=p.id;
+    el.setAttribute('role','button');el.tabIndex=0;
+    if(st.tip===s)el.classList.add('tipon');
   }
+  renderTip();
   // 旋轉鈕
   const sp=$('#spin');
   sp.innerHTML=(st.q&&st.answered)?(st.n>=ROUNDS?L('result'):L('next')):L('start');
@@ -769,6 +780,24 @@ function renderHelp(){
   $('#helpBody').innerHTML=['hp1','hp2','hp3','hp4','hp5'].map(k=>'<div class="gr">'+tr(k)+(hasF?'<div class="es">'+fo(k)+'</div>':'')+'</div>').join('');
   $('#helpClose').textContent=lab('close');
 }
+
+/* ============ 點地點圖示 → 單一地點翻譯氣泡 ============ */
+function renderTip(){
+  const tp=$('#tip');
+  const s=st.tip,p=(s==null)?null:st.cells[s];
+  if(!p){st.tip=null;tp.hidden=true;tp.innerHTML='';return}
+  const ph=phHtml(p),hasF=SETTINGS.lang!=='zh';
+  tp.innerHTML='<div class="tn">'+pn(p)+'</div>'+(ph?'<div class="tp">'+ph+'</div>':'')+(hasF?'<div class="tg">'+defN(p)+'</div>':'');
+  tp.hidden=false;
+  // 放在格子旁：上半部的格子氣泡在下面，下半部的在上面；左右不超出棋盤
+  const el=$('#cell-'+s),bd=$('#board'),bw=bd.clientWidth,bh=bd.clientHeight;
+  const cx=el.offsetLeft,cy=el.offsetTop,w=tp.offsetWidth,h=tp.offsetHeight,gap=4;
+  let x=Math.max(0,Math.min(bw-w,cx-w/2));
+  let y=cy<bh/2?cy+el.offsetHeight/2+gap:cy-el.offsetHeight/2-gap-h;
+  y=Math.max(0,Math.min(bh-h,y));
+  tp.style.left=x+'px';tp.style.top=y+'px';
+}
+function toggleTip(s){st.tip=(st.tip===s)?null:s;update()}
 
 /* ============ 小字典 ============ */
 function dictRow(name,o,gloss){
@@ -839,6 +868,9 @@ window.addEventListener('storage',e=>{
 });
 
 /* ============ 事件 ============ */
+$('#board').addEventListener('click',e=>{const c=e.target.closest('.cell');if(c&&!c.classList.contains('empty')){e.stopPropagation();toggleTip(+c.dataset.s)}});
+$('#board').addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const c=e.target.closest&&e.target.closest('.cell');if(c&&!c.classList.contains('empty')){e.preventDefault();toggleTip(+c.dataset.s)}});
+document.addEventListener('click',e=>{if(st.tip!=null&&!e.target.closest('.cell')){st.tip=null;renderTip();document.querySelectorAll('.cell.tipon').forEach(c=>c.classList.remove('tipon'))}});
 $('#spin').onclick=()=>{if(st.q&&st.answered){goNext();return}spin()};
 $('#qbox').onclick=e=>{const b=e.target.closest('.opt');if(b)answer(+b.dataset.i)};
 $('#gear').onclick=openSet;

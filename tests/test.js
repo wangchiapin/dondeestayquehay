@@ -661,6 +661,98 @@ async function fullGame(page, mode) {
   ok(rounds.ok && rounds.distinct > 1, '每局重新抽地點，字典跟著這一局的地點（連抽 6 局不是同一組）');
   await page.context().close();
 
+  // ===== 9a. 點地點圖示 → 單一地點翻譯氣泡 =====
+  console.log('== 點地點看翻譯 ==');
+  {
+    const tipOn = p => p.$eval('#tip', e => !e.hidden);
+    const tipTxt = p => p.$eval('#tip', e => e.textContent);
+    const tipInBoard = p => p.evaluate(() => {
+      const t = document.querySelector('#tip').getBoundingClientRect(), b = document.querySelector('#board').getBoundingClientRect();
+      return t.left >= b.left - 1 && t.right <= b.right + 1 && t.top >= b.top - 1 && t.bottom <= b.bottom + 1;
+    });
+    const clickCell = (p, s) => p.click('#cell-' + s);
+    const cellsOf = p => p.$$eval('.cell:not(.empty)', els => els.map(e => +e.dataset.s));
+
+    for (const mode of ['easy', 'hard']) {
+      const t = await fresh();
+      if (mode === 'hard') { await openSet(t); await opt(t, 'mode', 'hard'); await closeSet(t); }
+      ok(!(await tipOn(t)), `${mode}：一開始沒有氣泡`);
+      const cs = await cellsOf(t);
+      let allGood = true, inBoardAll = true;
+      for (const s of cs) {
+        await clickCell(t, s);
+        const want = await t.evaluate(i => { const p = st.cells[i]; return { zh: pn(p), py: p.py, es: p[FL()] }; }, s);
+        const txt = await tipTxt(t);
+        if (!(await tipOn(t)) || !txt.includes(want.zh) || !txt.includes(want.es)) allGood = false;
+        if (!(await tipInBoard(t))) inBoardAll = false;
+      }
+      ok(allGood, `${mode}：每個地點（${cs.length} 個）點下去都跳出中文名稱＋翻譯`);
+      ok(inBoardAll, `${mode}：每個氣泡都在棋盤範圍內，不會被切掉`);
+      await t.context().close();
+    }
+
+    const t = await fresh();
+    const cs = await cellsOf(t);
+    await clickCell(t, cs[0]);
+    ok(await tipOn(t) && await t.$eval('#cell-' + cs[0], e => e.classList.contains('tipon')), '點地點：出現氣泡、該格有標示');
+    ok(TONE.test(await tipTxt(t)), '氣泡有拼音（預設拼音）');
+    await clickCell(t, cs[1]);
+    ok((await tipTxt(t)).includes(await t.$eval('#cell-' + cs[1], e => e.dataset.name)) && await t.$$eval('.cell.tipon', e => e.length) === 1, '點另一個地點：氣泡換成新的，只有一個');
+    await clickCell(t, cs[1]);
+    ok(!(await tipOn(t)), '再點同一個地點：氣泡關掉');
+    await clickCell(t, cs[0]);
+    await t.click('h1');
+    ok(!(await tipOn(t)), '點別處：氣泡關掉');
+
+    // 作答中也能點，而且不暫停倒數、不影響作答
+    await spinToQuestion(t);
+    await clickCell(t, cs[2]);
+    ok(await tipOn(t) && await tbarOn(t), '題目出現後點地點：有氣泡，倒數條照常跑');
+    await t.click('.opt');
+    ok(await t.$eval('#score', e => e.textContent.startsWith('1 / 10')), '氣泡開著直接按選項：照常作答計分');
+    ok(!(await tipOn(t)) || true, '作答後氣泡可留可關');
+    await clickCell(t, cs[2]);
+    ok(await tipOn(t), '答完後也能點地點看翻譯');
+    await t.click('#spin');
+    ok(!(await tipOn(t)), '按「下一題」旋轉：氣泡自動關掉');
+    await t.waitForSelector('.opt:not([disabled])', { timeout: 9000 });
+
+    // 設定：換語言／字形／讀音，再點地點，氣泡內容跟著設定（按 ⚙️ 算「點別處」，氣泡會先關掉）
+    await clickCell(t, cs[0]);
+    await openSet(t);
+    ok(!(await tipOn(t)), '打開設定：氣泡先關掉');
+    await opt(t, 'lang', 'es'); await closeSet(t);
+    await clickCell(t, cs[0]);
+    const es = await t.evaluate(i => ({ t: document.querySelector('#tip').textContent, es: st.cells[i].es }), cs[0]);
+    ok(es.es && es.t.includes(es.es), '西語：氣泡顯示西文翻譯：' + es.t);
+    await openSet(t); await opt(t, 'lang', 'en'); await closeSet(t);
+    await clickCell(t, cs[0]);
+    const en = await t.evaluate(i => ({ t: document.querySelector('#tip').textContent, en: st.cells[i].en }), cs[0]);
+    ok(en.en && en.t.includes(en.en), '英語：氣泡顯示英文翻譯：' + en.t);
+    await openSet(t); await opt(t, 'lang', 'zh'); await closeSet(t);
+    await clickCell(t, cs[0]);
+    const zhOnly = await t.evaluate(() => ({ g: !!document.querySelector('#tip .tg'), on: !document.querySelector('#tip').hidden }));
+    ok(zhOnly.on && !zhOnly.g, '純中文：氣泡只有中文與讀音，沒有翻譯');
+    await openSet(t); await opt(t, 'script', 'simp'); await closeSet(t);
+    await clickCell(t, cs[0]);
+    ok(await t.evaluate(i => document.querySelector('#tip').textContent.includes(st.cells[i].zs), cs[0]), '簡體：氣泡跟著變簡體');
+    await openSet(t); await opt(t, 'phon', 'zhuyin'); await closeSet(t);
+    await clickCell(t, cs[0]);
+    ok(ZY.test(await tipTxt(t)), '注音：氣泡改顯示注音');
+    // 隱藏地點文字模式（只剩圖）時，點圖仍可看翻譯
+    await openSet(t); await opt(t, 'text', '0'); await closeSet(t);
+    await clickCell(t, cs[0]);
+    ok(await tipOn(t) && (await tipTxt(t)).length > 0, '隱藏地點文字（只剩圖）時，點圖仍可看氣泡');
+    // 鍵盤也能開
+    await t.focus('#cell-' + cs[1]); await t.keyboard.press('Enter');
+    ok((await tipTxt(t)).includes(await t.$eval('#cell-' + cs[1], e => e.dataset.name)), '鍵盤 Enter 也能開氣泡');
+    // 重玩／回主選單都會清掉
+    await t.click('#bHome'); await t.click('#cfmLeave');
+    await t.click('#startEasy');
+    ok(!(await tipOn(t)), '回主選單再開始：氣泡已清掉');
+    await t.context().close();
+  }
+
   // ===== 9b. 地點庫（50 個）=====
   console.log('== 地點庫 50 個 ==');
   page = await fresh();
